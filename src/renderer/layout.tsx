@@ -45,7 +45,7 @@ const Layout: React.FC<{
 }> = ({ sider }) => {
   const [collapsed, setCollapsed] = useState(false);
   const { onClick } = useDebug();
-  const { alertComponent: multiAgentAlert } = useMultiAgentDetection();
+  const { contextHolder: multiAgentContextHolder } = useMultiAgentDetection();
   return (
     <ArcoLayout className={'size-full layout'}>
       <ArcoLayout.Sider
@@ -89,9 +89,9 @@ const Layout: React.FC<{
         </ArcoLayout.Header>
         <ArcoLayout.Content className='h-[calc(100%-72px-16px)] p-8px layout-sider-content'>{sider}</ArcoLayout.Content>
       </ArcoLayout.Sider>
-      <ArcoLayout.Content className={'bg-#F9FAFB layout-content'} style={{ position: 'relative' }}>
+      <ArcoLayout.Content className={'bg-#F9FAFB layout-content'}>
         <Outlet></Outlet>
-        {multiAgentAlert}
+        {multiAgentContextHolder}
       </ArcoLayout.Content>
     </ArcoLayout>
   );
