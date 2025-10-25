@@ -92,6 +92,11 @@ jobs:
           
           # Try to rebuild node-pty separately with error handling
           npm rebuild node-pty || echo "node-pty rebuild failed, but continuing" node-pty
+          # Rebuild critical modules first
+          npm rebuild better-sqlite3 bcrypt
+          
+          # Try to rebuild node-pty separately with error handling
+          npm rebuild node-pty || echo "node-pty rebuild failed, but continuing" node-pty
         continue-on-error: ${{ startsWith(matrix.platform, 'windows') }}
         env:
           npm_config_runtime: electron
