@@ -52,13 +52,13 @@ jobs:
             command: 'node scripts/build-with-builder.js arm64 --mac --arm64'
             artifact-name: 'macos-build-arm64'
             arch: 'arm64'
-            dev_enabled: false  # Skip on dev branch
+            dev_enabled: true   # Build on dev branch
           - platform: 'macos-x64'
             os: 'macos-14'
             command: 'node scripts/build-with-builder.js x64 --mac --x64'
             artifact-name: 'macos-build-x64'
             arch: 'x64'
-            dev_enabled: true   # Build on dev branch
+            dev_enabled: false  # Skip on dev branch
           - platform: 'windows-x64'
             os: 'windows-2022'
             command: 'node scripts/build-with-builder.js x64 --win --x64'
