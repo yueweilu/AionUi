@@ -52,76 +52,100 @@ jobs:
             command: 'node scripts/build-with-builder.js arm64 --mac --arm64'
             artifact-name: 'macos-build-arm64'
             arch: 'arm64'
+            dev_enabled: false  # Skip on dev branch
           - platform: 'macos-x64'
             os: 'macos-14'
             command: 'node scripts/build-with-builder.js x64 --mac --x64'
             artifact-name: 'macos-build-x64'
             arch: 'x64'
+            dev_enabled: true   # Build on dev branch
           - platform: 'windows-x64'
             os: 'windows-2022'
             command: 'node scripts/build-with-builder.js x64 --win --x64'
             artifact-name: 'windows-build-x64'
             arch: 'x64'
+            dev_enabled: false  # Skip on dev branch
           - platform: 'windows-arm64'
             os: 'windows-2022'
             command: 'node scripts/build-with-builder.js arm64 --win --arm64'
             artifact-name: 'windows-build-arm64'
             arch: 'arm64'
+            dev_enabled: false  # Skip on dev branch
           - platform: 'linux'
             os: 'ubuntu-latest'
             command: 'npm run dist:linux'
             artifact-name: 'linux-build'
             arch: 'x64,arm64'
+            dev_enabled: false  # Skip on dev branch
 
     steps:
+      # Check if this build should run based on branch and platform
+      # dev 分支只构建 mac x64，其他平台直接跳过
+      - name: Check if build should run
+        id: should_build
+        run: |
+          if [[ "${{ github.ref }}" == "refs/heads/dev" && "${{ matrix.dev_enabled }}" != "true" ]]; then
+            echo "skip=true" >> $GITHUB_OUTPUT
+            echo "⏭️ Skipping ${{ matrix.platform }} build on dev branch"
+          else
+            echo "skip=false" >> $GITHUB_OUTPUT
+            echo "✅ Running ${{ matrix.platform }} build"
+          fi
+        shell: bash
+
       - name: Checkout code
+        if: steps.should_build.outputs.skip != 'true'
         uses: actions/checkout@v6
 
       - name: Setup Node.js
+        if: steps.should_build.outputs.skip != 'true'
         uses: actions/setup-node@v6
         with:
           node-version: '22'
           cache: 'npm'
 
       - name: Setup Python (for native dependencies)
+        if: steps.should_build.outputs.skip != 'true'
         uses: actions/setup-python@v6
         with:
           python-version: '3.11'
 
       - name: Install dependencies
+        if: steps.should_build.outputs.skip != 'true'
         run: npm ci
 
       - name: Setup Windows native dependencies (for Windows only)
-        if: startsWith(matrix.platform, 'windows')
+        if: steps.should_build.outputs.skip != 'true' && startsWith(matrix.platform, 'windows')
         run: |
           npm install --global node-gyp
 
       - name: Install MSVC ARM64 toolchain (Windows ARM64 only)
-        if: matrix.platform == 'windows-arm64'
+        if: steps.should_build.outputs.skip != 'true' && matrix.platform == 'windows-arm64'
         shell: pwsh
         run: |
           choco install visualstudio2022buildtools --yes --params "'--add Microsoft.VisualStudio.Component.VC.Tools.ARM64 --add Microsoft.VisualStudio.Component.Windows11SDK.22000 --includeRecommended --includeOptional'"
 
       - name: Setup Windows build environment (for Windows only)
-        if: startsWith(matrix.platform, 'windows')
+        if: steps.should_build.outputs.skip != 'true' && startsWith(matrix.platform, 'windows')
         run: |
           echo "Setting Windows SDK version for ConPty support"
           echo "WindowsTargetPlatformVersion=10.0.19041.0" >> $env:GITHUB_ENV
 
       - name: Setup MSBuild (for Windows only)
-        if: startsWith(matrix.platform, 'windows')
+        if: steps.should_build.outputs.skip != 'true' && startsWith(matrix.platform, 'windows')
         uses: microsoft/setup-msbuild@v2
         with:
           vs-version: '17.0'
 
       - name: Rebuild native modules for Electron
-        if: "!startsWith(matrix.platform, 'windows')"
+        if: steps.should_build.outputs.skip != 'true' && !startsWith(matrix.platform, 'windows')
         run: npx electron-builder install-app-deps
         env:
           npm_config_runtime: electron
           npm_config_disturl: https://electronjs.org/headers
 
       - name: Get Electron version
+        if: steps.should_build.outputs.skip != 'true'
         id: electron-version
         shell: bash
         run: |
@@ -130,6 +154,7 @@ jobs:
           echo "Electron version: $ELECTRON_VERSION"
 
       - name: Print build configuration
+        if: steps.should_build.outputs.skip != 'true'
         shell: bash
         run: |
           echo "=========================================="
@@ -144,7 +169,7 @@ jobs:
 
       # macOS 代码签名证书安装
       - name: Setup macOS code signing (macOS only)
-        if: startsWith(matrix.platform, 'macos')  # Temporarily disable signing to speed up builds / 暂时关闭签名以加快构建
+        if: steps.should_build.outputs.skip != 'true' && startsWith(matrix.platform, 'macos')  # Temporarily disable signing to speed up builds / 暂时关闭签名以加快构建
         env:
           BUILD_CERTIFICATE_BASE64: ${{ secrets.BUILD_CERTIFICATE_BASE64 }}
           P12_PASSWORD: ${{ secrets.P12_PASSWORD }}
@@ -175,13 +200,13 @@ jobs:
           fi
 
       - name: Install Linux dependencies
-        if: matrix.platform == 'linux'
+        if: steps.should_build.outputs.skip != 'true' && matrix.platform == 'linux'
         run: |
           sudo apt-get update
           sudo apt-get install -y build-essential python3 python3-pip pkg-config libsqlite3-dev fakeroot dpkg-dev rpm libnss3-dev libatk-bridge2.0-dev libdrm2 libxkbcommon-dev libxss1 libatspi2.0-dev libgtk-3-dev libxrandr2 libasound2-dev
 
       - name: Rebuild native modules for Electron
-        if: startsWith(matrix.platform, 'windows')
+        if: steps.should_build.outputs.skip != 'true' && startsWith(matrix.platform, 'windows')
         shell: pwsh
         continue-on-error: false  # 修复：原生模块重建失败应该中止构建
         run: |
@@ -239,7 +264,7 @@ jobs:
           GYP_MSVS_VERSION: 2022
 
       - name: Build with electron-builder (Windows)
-        if: startsWith(matrix.platform, 'windows')
+        if: steps.should_build.outputs.skip != 'true' && startsWith(matrix.platform, 'windows')
         id: windows-build
         shell: pwsh
         run: |
@@ -264,6 +289,9 @@ jobs:
           }
         env:
           WINDOWS_BUILD_COMMAND: ${{ matrix.command }}
+          # Increase Node.js heap memory to prevent OOM during webpack build
+          # 增加 Node.js 堆内存限制以防止 webpack 构建时内存溢出
+          NODE_OPTIONS: "--max-old-space-size=8192"
           # Target arch / 目标架构
           npm_config_arch: ${{ matrix.arch }}
           npm_config_target_arch: ${{ matrix.arch }}
@@ -295,7 +323,7 @@ jobs:
       # Clean up any stale disk images before DMG creation (macOS only)
       # 清理可能残留的磁盘镜像，避免 hdiutil "Device not configured" 错误
       - name: Clean up stale disk images (macOS only)
-        if: startsWith(matrix.platform, 'macos')
+        if: steps.should_build.outputs.skip != 'true' && startsWith(matrix.platform, 'macos')
         run: |
           echo "Cleaning up any stale disk images..."
           # Detach any mounted disk images
@@ -308,7 +336,7 @@ jobs:
           echo "Cleanup complete"
 
       - name: Build with electron-builder (non-Windows)
-        if: "!startsWith(matrix.platform, 'windows')"
+        if: steps.should_build.outputs.skip != 'true' && !startsWith(matrix.platform, 'windows')
         uses: nick-fields/retry@v3
         with:
           timeout_minutes: 80
@@ -328,13 +356,18 @@ jobs:
               rm -f /tmp/*.dmg 2>/dev/null || true
             fi
         env:
+          # Increase Node.js heap memory to prevent OOM during webpack build
+          # 增加 Node.js 堆内存限制以防止 webpack 构建时内存溢出
+          NODE_OPTIONS: "--max-old-space-size=8192"
           # Target architecture / 目标架构
           npm_config_arch: ${{ matrix.arch }}
           # App ID configuration / 应用 ID 配置
           APP_ID: ${{ secrets.APP_ID }}
-          # macOS signing configuration / macOS 签名配置
-          appleId: ${{ secrets.APPLE_ID }}
-          appleIdPassword: ${{ secrets.APPLE_ID_PASSWORD }}
+          # macOS signing & notarization configuration / macOS 签名和公证配置
+          # dev branch: skip notarization by not providing Apple ID credentials
+          # dev 分支：不提供 Apple ID 凭据以跳过公证
+          appleId: ${{ github.ref == 'refs/heads/main' && secrets.APPLE_ID || '' }}
+          appleIdPassword: ${{ github.ref == 'refs/heads/main' && secrets.APPLE_ID_PASSWORD || '' }}
           teamId: ${{ secrets.TEAM_ID }}
           identity: ${{ secrets.IDENTITY }}
           # electron-builder signing configuration / electron-builder 签名配置
@@ -367,7 +400,7 @@ jobs:
 
       # macOS 钥匙串清理
       - name: Clean up keychain (macOS only)
-        if: startsWith(matrix.platform, 'macos') && always()
+        if: steps.should_build.outputs.skip != 'true' && startsWith(matrix.platform, 'macos') && always()
         run: |
           if security list-keychains | grep -q build.keychain; then
             security delete-keychain build.keychain
@@ -376,7 +409,7 @@ jobs:
 
       # macOS 构建超时或失败通知
       - name: Notify on macOS build timeout or failure
-        if: startsWith(matrix.platform, 'macos') && failure()
+        if: steps.should_build.outputs.skip != 'true' && startsWith(matrix.platform, 'macos') && failure()
         run: |
           echo "::warning title=macOS Build Timeout or Failure::macOS build did not complete within 40 minutes or failed. This is often due to Apple notarization delays."
           echo ""
@@ -401,7 +434,7 @@ jobs:
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
       - name: List build artifacts
-        if: success() || (failure() && startsWith(matrix.platform, 'macos'))
+        if: steps.should_build.outputs.skip != 'true' && (success() || (failure() && startsWith(matrix.platform, 'macos')))
         shell: bash
         run: |
           echo "=========================================="
@@ -419,8 +452,9 @@ jobs:
       - name: Upload build artifacts
         uses: actions/upload-artifact@v6
         if: >-
-          (success() && (!startsWith(matrix.platform, 'windows') || steps.windows-build.outputs.result == 'success'))
-          || (failure() && startsWith(matrix.platform, 'macos'))
+          steps.should_build.outputs.skip != 'true' &&
+          ((success() && (!startsWith(matrix.platform, 'windows') || steps.windows-build.outputs.result == 'success'))
+          || (failure() && startsWith(matrix.platform, 'macos')))
         with:
           name: ${{ matrix.artifact-name }}
           path: |
