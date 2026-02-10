@@ -35,7 +35,7 @@ export function initConversationBridge(): void {
     }
   };
 
-  const removeConversationById = async (id: string): Promise<boolean> => {
+  const removeConversationById = async (id: string, options?: { skipFileCleanup?: boolean }): Promise<boolean> => {
     try {
       const db = getDatabase();
 
@@ -43,9 +43,11 @@ export function initConversationBridge(): void {
       const convResult = db.getConversation(id);
       let conversation = convResult.data;
       // Fallback to file storage when conversation hasn't been migrated to database yet
+      // Cache history to avoid a second read later
+      let cachedHistory: TChatConversation[] | undefined;
       if (!conversation) {
-        const history = (await ProcessChat.get('chat.history')) || [];
-        conversation = history.find((item) => item.id === id);
+        cachedHistory = (await ProcessChat.get('chat.history')) || [];
+        conversation = cachedHistory.find((item) => item.id === id);
       }
       const source = conversation?.source;
 
@@ -87,11 +89,16 @@ export function initConversationBridge(): void {
         console.error('[conversationBridge] Failed to delete conversation from database:', result.error);
       }
 
+      // Skip file cleanup when called from batch removal (batch handles it once at the end)
+      if (options?.skipFileCleanup) {
+        return !!result.data;
+      }
+
       // Also remove from file storage to prevent reappearing in lazy-merge list
       // 同步清理文件存储，避免 databaseBridge 将旧记录重新合并回来
       let removedFromFile = false;
       try {
-        const history = (await ProcessChat.get('chat.history')) || [];
+        const history = cachedHistory ?? ((await ProcessChat.get('chat.history')) || []);
         if (Array.isArray(history)) {
           const filtered = history.filter((item) => item.id !== id);
           if (filtered.length !== history.length) {
@@ -270,18 +277,42 @@ export function initConversationBridge(): void {
       return { successIds: [], failedIds: [] };
     }
 
-    const results = await Promise.all(
-      uniqueIds.map(async (conversationId) => {
-        const success = await withTimeout(removeConversationById(conversationId), 10000, `remove conversation timeout: ${conversationId}`).catch((error) => {
-          console.error('[conversationBridge] removeBatch item failed:', { conversationId, error });
-          return false;
-        });
-        return { conversationId, success };
-      })
-    );
+    // Process deletions with concurrency limit to avoid overwhelming the system
+    const CONCURRENCY_LIMIT = 5;
+    const results: { conversationId: string; success: boolean }[] = [];
+
+    for (let i = 0; i < uniqueIds.length; i += CONCURRENCY_LIMIT) {
+      const chunk = uniqueIds.slice(i, i + CONCURRENCY_LIMIT);
+      const chunkResults = await Promise.all(
+        chunk.map(async (conversationId) => {
+          const success = await withTimeout(removeConversationById(conversationId, { skipFileCleanup: true }), 10000, `remove conversation timeout: ${conversationId}`).catch((error) => {
+            console.error('[conversationBridge] removeBatch item failed:', { conversationId, error });
+            return false;
+          });
+          return { conversationId, success };
+        })
+      );
+      results.push(...chunkResults);
+    }
 
     const successIds = results.filter((item) => item.success).map((item) => item.conversationId);
     const failedIds = results.filter((item) => !item.success).map((item) => item.conversationId);
+
+    // Batch file storage cleanup: read once, filter all success IDs, write once
+    if (successIds.length > 0) {
+      try {
+        const history = (await ProcessChat.get('chat.history')) || [];
+        if (Array.isArray(history)) {
+          const removedSet = new Set(successIds);
+          const filtered = history.filter((item) => !removedSet.has(item.id));
+          if (filtered.length !== history.length) {
+            await ProcessChat.set('chat.history', filtered);
+          }
+        }
+      } catch (fileError) {
+        console.warn('[conversationBridge] Failed to batch cleanup file storage:', fileError);
+      }
+    }
 
     return { successIds, failedIds };
   });
