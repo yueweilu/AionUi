@@ -70,11 +70,6 @@ openclaw agent --message "帮我完成某个任务"
   - Gateway 启动和管理
   - 服务安装（launchd/systemd）
   - 远程 Gateway 部署
-- **`references/programmatic-config.md`** - 程序化配置指南
-  - 通过 `openclaw config set` 命令配置
-  - 直接读写配置文件
-  - 最小化初始配置
-  - 在 AionUi 中的实现建议
 
 ### 故障排除
 

@@ -130,19 +130,9 @@ OpenClaw 设计为在受信任的环境中使用，所有操作都需要你的�
    - **检查配置状态**（直接执行，环境同步格式）：运行 `source ~/.zshrc && openclaw doctor` 检查是否已配置
    - **如果未配置**（配置文件不存在或 Gateway 未设置）：
      - 说明需要初始配置："要让 OpenClaw 真正开始工作，还需要进行一些基础配置。这包括设置 Gateway（OpenClaw 的核心，用来接收和处理指令）和创建工作区来存放 Agent 和数据。"
-     - **提供两种配置方式**：
-       - **方式 A：程序化配置**（推荐，更快）："我可以直接为你设置基本配置，包括 Gateway 模式、端口、工作区等。这种方式更快，但需要你提供 API Key 等敏感信息。"
-       - **方式 B：交互式引导**："或者，你可以自己在终端中运行 OpenClaw 的新手引导命令 `openclaw onboard --install-daemon`。这是一个交互式向导，会在终端中一步步引导你完成所有设置，包括 Gateway 配置、API Key 输入、渠道设置等，还会帮你把 Gateway 设置成开机自启动的后台服务。"
-     - 询问用户选择："你希望我直接为你配置（需要你提供 API Key），还是你自己在终端中运行交互式引导？" → **等待用户确认**
-     - **如果选择程序化配置**：
-       - 询问 API Key（如果需要）："为了配置模型，我需要你的 Anthropic API Key。你可以提供吗？" → **等待用户提供**
-       - 执行程序化配置（环境同步格式）：
-         - 创建配置目录：`mkdir -p ~/.openclaw`
-         - 设置基本配置：使用 `openclaw config set` 命令设置 `gateway.mode=local`、`gateway.port=18789`、`gateway.bind=127.0.0.1`、`agents.defaults.workspace=~/.openclaw/workspace`
-         - 如果用户提供了 API Key：设置环境变量或通过 `openclaw config set` 设置（参考 `references/programmatic-config.md`）
-         - 创建工作区目录：`mkdir -p ~/.openclaw/workspace`
-       - 验证配置状态（环境同步格式）：运行 `openclaw doctor`
-     - **如果选择交互式引导**：
+     - 介绍 `openclaw onboard` 新手引导命令："OpenClaw 提供了一个交互式配置向导 `openclaw onboard --install-daemon`，会在终端中一步步引导你完成所有设置，包括 Gateway 配置、API Key 输入、渠道设置等，还会帮你把 Gateway 设置成开机自启动的后台服务。"
+     - 询问用户："需要我引导你进行配置吗？" → **等待用户确认**
+     - 用户确认后：
        - 提供命令和说明："好的，请在终端中运行以下命令，然后按照提示完成配置："
        - 提供命令：`openclaw onboard --install-daemon`（**注意**：用户在自己的终端中运行，不需要 `source ~/.zshrc` 前缀，因为用户的终端环境已经加载了配置）
        - 说明："这个命令会启动交互式配置向导，你需要在终端中回答一些问题（如 Gateway 模式、API Key、工作区位置等）。配置完成后，告诉我，我会帮你验证配置是否正确。"
@@ -252,7 +242,6 @@ OpenClaw 设计为在受信任的环境中使用，所有操作都需要你的�
 
 - 安装问题 → 阅读 `references/installation.md`
 - 配置问题 → 阅读 `references/configuration.md`
-- 程序化配置 → 阅读 `references/programmatic-config.md`（通过命令或文件读写方式配置，而非交互式）
 - 问题诊断 → 阅读 `references/troubleshooting.md`
 - 使用问题 → 阅读 `references/usage.md`
 - 高级场景 → 阅读 `references/best-practices.md`

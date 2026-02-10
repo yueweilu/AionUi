@@ -126,21 +126,11 @@ I've explained OpenClaw's capabilities and permission scope. OpenClaw is a power
    - **Check configuration status** (execute directly, environment-synchronized format): Run `source ~/.zshrc && openclaw doctor` to check if configured
    - **If not configured** (config file doesn't exist or Gateway not set):
      - Explain initial configuration needed: "For OpenClaw to truly start working, some basic configuration is still needed. This includes setting up a Gateway (OpenClaw's core, used to receive and process commands) and creating a workspace to store your Agent and data."
-     - **Provide two configuration options**:
-       - **Option A: Programmatic configuration** (recommended, faster): "I can directly set up the basic configuration for you, including Gateway mode, port, workspace, etc. This is faster, but requires you to provide sensitive information like API Key."
-       - **Option B: Interactive onboarding**: "Alternatively, you can run OpenClaw's beginner's guide command `openclaw onboard --install-daemon` yourself in the terminal. This is an interactive wizard that will guide you step-by-step through all settings in the terminal, including Gateway configuration, API Key input, channel setup, etc., and will also help you set up the Gateway as a background service that starts automatically on boot."
-     - Ask user to choose: "Would you like me to configure it directly (requires your API Key), or would you prefer to run the interactive onboarding yourself in the terminal?" → **Wait for user confirmation**
-     - **If user chooses programmatic configuration**:
-       - Ask for API Key if needed: "To configure the model, I need your Anthropic API Key. Can you provide it?" → **Wait for user to provide**
-       - Execute programmatic configuration (environment-synchronized format):
-         - Create config directory: `mkdir -p ~/.openclaw`
-         - Set basic config: Use `openclaw config set` commands to set `gateway.mode=local`, `gateway.port=18789`, `gateway.bind=127.0.0.1`, `agents.defaults.workspace=~/.openclaw/workspace`
-         - If user provided API Key: Set via environment variable or `openclaw config set` (reference `references/programmatic-config.md`)
-         - Create workspace directory: `mkdir -p ~/.openclaw/workspace`
-       - Verify configuration status (environment-synchronized format): Run `openclaw doctor`
-     - **If user chooses interactive onboarding**:
+     - Introduce the `openclaw onboard` beginner's guide command: "OpenClaw provides an interactive configuration wizard `openclaw onboard --install-daemon` that will guide you step-by-step through all settings in the terminal, including Gateway configuration, API Key input, channel setup, etc., and will also help you set up the Gateway as a background service that starts automatically on boot."
+     - Ask user: "Would you like me to guide you through the configuration?" → **Wait for user confirmation**
+     - After user confirms:
        - Provide command and instructions: "Okay, please run the following command in your terminal, then follow the prompts to complete the configuration:"
-       - Provide command: `openclaw onboard --install-daemon`（**Note**: When users run commands in their own terminal, they don't need the `source ~/.zshrc` prefix because their terminal environment has already loaded the configuration）
+       - Provide command: `openclaw onboard --install-daemon` (**Note**: When users run commands in their own terminal, they don't need the `source ~/.zshrc` prefix because their terminal environment has already loaded the configuration)
        - Explain: "This command will start an interactive configuration wizard. You'll need to answer some questions in the terminal (such as Gateway mode, API Key, workspace location, etc.). After you complete the configuration, let me know and I'll help you verify that the configuration is correct."
        - **After user completes configuration**: Verify configuration status (environment-synchronized format): Run `source ~/.zshrc && openclaw doctor` (assistant execution needs environment synchronization prefix)
    - **If already configured**:
@@ -248,7 +238,6 @@ Contains comprehensive OpenClaw documentation:
 
 - Installation questions → Read `references/installation.md`
 - Configuration questions → Read `references/configuration.md`
-- Programmatic configuration → Read `references/programmatic-config.md` (configure via commands or file read/write, not interactive)
 - Problem diagnosis → Read `references/troubleshooting.md`
 - Usage questions → Read `references/usage.md`
 - Advanced scenarios → Read `references/best-practices.md`
