@@ -6,11 +6,11 @@
 
 import type { TMessage } from '@/common/chatLib';
 import { getDatabase } from '@/process/database';
+import { ProcessConfig } from '@/process/initStorage';
 import { ConversationService } from '@/process/services/conversationService';
 import { buildChatErrorResponse, chatActions } from '../actions/ChatActions';
 import { handlePairingShow, platformActions } from '../actions/PlatformActions';
 import { getChannelDefaultModel, systemActions } from '../actions/SystemActions';
-import { getChannelConversationName, isChannelPlatform } from '../types';
 import type { IActionContext, IRegisteredAction } from '../actions/types';
 import { getChannelMessageService } from '../agent/ChannelMessageService';
 import type { SessionManager } from '../core/SessionManager';
@@ -22,6 +22,7 @@ import { createMainMenuKeyboard, createResponseActionsKeyboard, createToolConfir
 import { escapeHtml } from '../plugins/telegram/TelegramAdapter';
 import type { IUnifiedIncomingMessage, IUnifiedOutgoingMessage, PluginType } from '../types';
 import type { PluginManager } from './PluginManager';
+import type { AcpBackend } from '@/types/acpTypes';
 
 // ==================== Platform-specific Helpers ====================
 
@@ -202,6 +203,17 @@ function convertTMessageToOutgoing(message: TMessage, platform: PluginType, isCo
       };
     }
 
+    case 'acp_permission':
+    case 'codex_permission': {
+      // Channels currently don't support interactive tool permission confirmations.
+      // Provide a clear hint instead of showing a blank/processing message.
+      return {
+        type: 'text',
+        text: `⚠️ ${formatTextForPlatform('Permission required. Please open AionUi and confirm the pending request in the conversation panel.', platform)}`,
+        parseMode: 'HTML',
+      };
+    }
+
     default:
       // 其他类型暂不支持，显示通用消息
       // Other types not supported yet, show generic message
@@ -319,22 +331,69 @@ export class ActionExecutor {
       // 获取或创建会话，优先复用该平台来源的会话
       let session = this.sessionManager.getSession(channelUser.id);
       if (!session || !session.conversationId) {
-        // 获取用户选择的模型（根据平台）/ Get user selected model (based on platform)
-        const channelPlatform = isChannelPlatform(platform) ? platform : 'telegram';
-        const model = await getChannelDefaultModel(channelPlatform);
+        const conversationName = platform === 'lark' ? 'Lark Assistant' : 'Telegram Assistant';
+        const source = platform === 'lark' ? 'lark' : 'telegram';
 
-        // 使用 ConversationService 获取或创建会话（根据平台）
-        // Use ConversationService to get or create conversation (based on platform)
-        const conversationName = getChannelConversationName(channelPlatform);
-        const result = await ConversationService.getOrCreateChannelConversation({
-          model,
-          name: conversationName,
-          source: channelPlatform,
-        });
+        // Read selected agent for this platform (defaults to Gemini)
+        let savedAgent: unknown = undefined;
+        try {
+          savedAgent = await (platform === 'lark' ? ProcessConfig.get('assistant.lark.agent') : ProcessConfig.get('assistant.telegram.agent'));
+        } catch {
+          // ignore
+        }
+        const backend = (savedAgent && typeof savedAgent === 'object' && typeof (savedAgent as any).backend === 'string' ? (savedAgent as any).backend : 'gemini') as string;
+        const customAgentId = savedAgent && typeof savedAgent === 'object' ? ((savedAgent as any).customAgentId as string | undefined) : undefined;
+        const agentName = savedAgent && typeof savedAgent === 'object' ? ((savedAgent as any).name as string | undefined) : undefined;
+
+        // Always resolve a provider model (required by ICreateConversationParams typing; ignored by ACP/Codex)
+        const model = await getChannelDefaultModel(platform);
+
+        // Try to reuse latest conversation for this source only when it matches the selected agent.
+        const db2 = getDatabase();
+        const latest = db2.getLatestConversationBySource(source);
+        const existing = latest.success ? latest.data : null;
+
+        const matchesSelection = (() => {
+          if (!existing) return false;
+          if (backend === 'codex') return existing.type === 'codex';
+          if (backend === 'gemini') return existing.type === 'gemini';
+          if (existing.type !== 'acp') return false;
+          const e = existing.extra as any;
+          return e?.backend === backend && (customAgentId ? e?.customAgentId === customAgentId : true);
+        })();
+
+        const result = matchesSelection
+          ? { success: true as const, conversation: existing }
+          : backend === 'codex'
+            ? await ConversationService.createConversation({
+                type: 'codex',
+                model,
+                name: conversationName,
+                source,
+                extra: {},
+              })
+            : backend === 'gemini'
+              ? await ConversationService.createGeminiConversation({
+                  model,
+                  name: conversationName,
+                  source,
+                })
+              : await ConversationService.createConversation({
+                  type: 'acp',
+                  model,
+                  name: conversationName,
+                  source,
+                  extra: {
+                    backend: backend as AcpBackend,
+                    customAgentId,
+                    agentName,
+                  },
+                });
 
         if (result.success && result.conversation) {
-          session = this.sessionManager.createSessionWithConversation(channelUser, result.conversation.id);
-          console.log(`[ActionExecutor] Using conversation via ConversationService: ${result.conversation.id}`);
+          const agentType = backend === 'codex' ? 'codex' : backend === 'gemini' ? 'gemini' : 'acp';
+          session = this.sessionManager.createSessionWithConversation(channelUser, result.conversation.id, agentType);
+          console.log(`[ActionExecutor] Using conversation: ${result.conversation.id} (platform=${platform}, backend=${backend})`);
         } else {
           console.error(`[ActionExecutor] Failed to create conversation: ${result.error}`);
           await context.sendMessage({

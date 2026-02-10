@@ -5,6 +5,7 @@
  */
 
 import { OpenClawAgent, type OpenClawAgentConfig } from '@/agent/openclaw';
+import { channelEventBus } from '@/channels/agent/ChannelEventBus';
 import { ipcBridge } from '@/common';
 import type { IConfirmation, TMessage } from '@/common/chatLib';
 import { transformMessage } from '@/common/chatLib';
@@ -105,6 +106,9 @@ class OpenClawAgentManager extends BaseAgentManager<OpenClawAgentManagerData> {
 
     // Emit to frontend
     ipcBridge.openclawConversation.responseStream.emit(msg);
+
+    // Emit to Channel global event bus (Telegram/Lark streaming)
+    channelEventBus.emitAgentMessage(this.conversation_id, msg);
   }
 
   private handleSignalEvent(message: IResponseMessage): void {
@@ -141,6 +145,9 @@ class OpenClawAgentManager extends BaseAgentManager<OpenClawAgentManagerData> {
 
     // Emit signal events to frontend
     ipcBridge.openclawConversation.responseStream.emit(msg);
+
+    // Forward signals to Channel global event bus
+    channelEventBus.emitAgentMessage(this.conversation_id, msg);
   }
 
   private handleSessionKeyUpdate(sessionKey: string): void {

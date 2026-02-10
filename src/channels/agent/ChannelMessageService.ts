@@ -174,18 +174,24 @@ export class ChannelMessageService {
 
       // 发送消息
       // Send message
-      task
-        .sendMessage({
-          input: message,
-          msg_id: msgId,
-        })
-        .catch((error: Error) => {
-          const errorMessage = `Error: ${error.message || 'Failed to send message'}`;
-          console.error(`[ChannelMessageService] Send error:`, error);
-          onStream({ type: 'tips', id: uuid(), conversation_id: conversationId, content: { type: 'error', content: errorMessage } }, true);
-          this.activeStreams.delete(conversationId);
-          reject(error);
-        });
+      const payload =
+        task.type === 'gemini'
+          ? {
+              input: message,
+              msg_id: msgId,
+            }
+          : {
+              content: message,
+              msg_id: msgId,
+            };
+
+      task.sendMessage(payload).catch((error: Error) => {
+        const errorMessage = `Error: ${error.message || 'Failed to send message'}`;
+        console.error(`[ChannelMessageService] Send error:`, error);
+        onStream({ type: 'tips', id: uuid(), conversation_id: conversationId, content: { type: 'error', content: errorMessage } }, true);
+        this.activeStreams.delete(conversationId);
+        reject(error);
+      });
     });
   }
 

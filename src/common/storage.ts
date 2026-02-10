@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import type { AcpBackend, AcpBackendConfig } from '@/types/acpTypes';
+import type { AcpBackend, AcpBackendAll, AcpBackendConfig } from '@/types/acpTypes';
 import { storage } from '@office-ai/platform';
 
 /**
@@ -77,7 +77,7 @@ export interface IConfigStorageRefer {
   };
   // Telegram assistant agent selection / Telegram 助手所使用的 Agent
   'assistant.telegram.agent'?: {
-    backend: AcpBackend;
+    backend: AcpBackendAll;
     customAgentId?: string;
     name?: string;
   };
@@ -88,7 +88,7 @@ export interface IConfigStorageRefer {
   };
   // Lark assistant agent selection / Lark 助手所使用的 Agent
   'assistant.lark.agent'?: {
-    backend: AcpBackend;
+    backend: AcpBackendAll;
     customAgentId?: string;
     name?: string;
   };
