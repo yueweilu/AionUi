@@ -4,11 +4,13 @@
 
 AionUi 支持 WebUI 模式，允许通过浏览器访问应用。这对于远程使用 OpenClaw 非常有用。AionUi 提供三种远程连接方式，满足不同场景的需求。
 
+**重要**：WebUI 配置应通过 AionUi 设置界面完成，无需使用命令行。本指南将引导你如何在设置界面中完成配置。
+
 ## 三种远程连接方式
 
 | 连接方式                    | 使用场景                     | 描述                                            | 难度        |
 | --------------------------- | ---------------------------- | ----------------------------------------------- | ----------- |
-| **1. 局域网连接**           | 同一 WiFi/LAN 的设备访问     | 手机和电脑在同一 WiFi，使用 `--remote` 参数     | ⭐ 简单     |
+| **1. 局域网连接**           | 同一 WiFi/LAN 的设备访问     | 手机和电脑在同一 WiFi，启用"允许远程访问"       | ⭐ 简单     |
 | **2. 远程软件 (Tailscale)** | 跨网络访问（如办公室到家庭） | 使用 VPN 软件如 Tailscale，无需公网 IP 或服务器 | ⭐ 非常简单 |
 | **3. 服务器部署**           | 多用户访问、24/7 运行        | 部署在云服务器，通过公网 IP 直接访问            | ⭐⭐ 中等   |
 
@@ -24,9 +26,59 @@ AionUi 支持 WebUI 模式，允许通过浏览器访问应用。这对于远程
 
 - **默认端口**：25808
 - **本地访问地址**：`http://localhost:25808`
-- **远程访问地址**：`http://<LAN_IP>:25808`（需要 `--remote` 参数）
+- **远程访问地址**：`http://<LAN_IP>:25808`（需要启用"允许远程访问"）
 - **默认用户名**：`admin`
-- **初始密码**：首次启动时自动生成，会在控制台显示
+- **初始密码**：首次启动时自动生成，在设置界面中显示
+
+---
+
+## 快速开始：通过设置界面配置 WebUI
+
+### 打开 WebUI 设置界面
+
+**方式 1：通过设置按钮（推荐）**
+
+1. 在 AionUi 主界面，点击左下角的**设置图标**（齿轮图标）
+2. 在设置菜单中，点击 **"WebUI"** 选项
+3. 进入 WebUI 配置界面
+
+**方式 2：通过快捷键**
+
+- 在 AionUi 主界面，使用快捷键打开设置（具体快捷键请查看 AionUi 帮助文档）
+
+**方式 3：通过路由（WebUI 模式）**
+
+- 如果已在 WebUI 模式下，访问：`http://<服务器地址>:25808/#/settings/webui`
+
+### 配置步骤
+
+#### Step 1: 启用 WebUI
+
+1. 在 WebUI 设置界面中，找到 **"启用 WebUI"** 开关
+2. 将开关切换到**开启**状态
+3. 等待几秒钟，WebUI 服务启动后，会显示 **"✓ 运行中"** 状态
+
+#### Step 2: 启用远程访问（如果需要）
+
+1. 在 **"允许远程访问"** 选项中，将开关切换到**开启**状态
+2. 如果 WebUI 正在运行，系统会自动重启以应用新设置
+
+#### Step 3: 获取访问信息
+
+WebUI 启动后，设置界面会显示：
+
+1. **访问地址**：
+   - **本地访问**：`http://localhost:25808`（仅本机访问）
+   - **网络访问**：`http://<局域网IP>:25808`（如果启用了远程访问）
+
+2. **登录信息**：
+   - **用户名**：`admin`（可点击复制）
+   - **密码**：首次启动时会显示初始密码（可点击复制）
+   - 如果密码已隐藏，点击密码旁边的**重置图标**可以重置密码并显示新密码
+
+3. **二维码登录**（如果启用了远程访问）：
+   - 使用手机扫描二维码，即可在手机浏览器中自动登录
+   - 二维码有效期 5 分钟，过期后点击"刷新二维码"获取新的二维码
 
 ---
 
@@ -38,109 +90,30 @@ AionUi 支持 WebUI 模式，允许通过浏览器访问应用。这对于远程
 - 同一局域网内的设备访问
 - 临时远程访问
 
-### 环境检测
+### 配置步骤
 
-在启动 WebUI 之前，需要先检测当前环境：
+#### Step 1: 打开 WebUI 设置界面
 
-1. **检查是否是开发环境**：
+1. 在 AionUi 主界面，点击左下角的**设置图标**
+2. 点击 **"WebUI"** 选项
 
-   ```bash
-   # 检查当前目录是否是 AionUi 项目目录
-   test -f package.json && grep -q '"webui"' package.json && echo "开发环境" || echo "不是开发环境"
-   ```
+#### Step 2: 启用 WebUI 和远程访问
 
-2. **检查是否已安装 AionUi 应用**：
+1. 将 **"启用 WebUI"** 开关切换到**开启**状态
+2. 将 **"允许远程访问"** 开关切换到**开启**状态
+3. 等待服务启动完成
 
-   ```bash
-   # macOS
-   test -f /Applications/AionUi.app/Contents/MacOS/AionUi && echo "已安装" || echo "未安装"
+#### Step 3: 复制访问地址
 
-   # Linux
-   which aionui || test -f /opt/AionUi/aionui && echo "已安装" || echo "未安装"
+1. 在设置界面中，找到 **"访问地址"** 部分
+2. 复制**网络访问地址**（格式：`http://<局域网IP>:25808`）
+3. 如果看不到网络访问地址，说明"允许远程访问"未启用，请返回 Step 2
 
-   # Windows
-   test -f "C:\Program Files\AionUi\AionUi.exe" && echo "已安装" || echo "未安装"
-   ```
+#### Step 4: 在远程设备上访问
 
-### 启动方式
-
-#### 开发环境（npm 脚本）
-
-**前提条件**：必须在 AionUi 项目目录中
-
-```bash
-# 在 AionUi 项目目录中
-npm run webui:remote
-```
-
-**注意**：如果当前不在项目目录，需要先切换到项目目录：
-
-```bash
-cd /path/to/AionUi
-npm run webui:remote
-```
-
-#### 生产环境（已安装的应用）
-
-**前提条件**：AionUi 应用已安装到系统
-
-**Windows:**
-
-```cmd
-"C:\Program Files\AionUi\AionUi.exe" --webui --remote
-```
-
-**macOS:**
-
-```bash
-/Applications/AionUi.app/Contents/MacOS/AionUi --webui --remote
-```
-
-**Linux:**
-
-```bash
-aionui --webui --remote
-# 或
-/opt/AionUi/aionui --webui --remote
-```
-
-### 获取访问地址
-
-**重要**：WebUI 启动后，助手应该主动获取并直接提供给用户访问地址，而不是让用户自己去查找。
-
-1. **获取局域网 IP 地址**（助手自动执行）
-
-   ```bash
-   # macOS/Linux
-   ifconfig | grep "inet " | grep -v 127.0.0.1 | head -1 | awk '{print $2}'
-   # 或
-   ip addr show | grep "inet " | grep -v 127.0.0.1 | head -1 | awk '{print $2}' | cut -d/ -f1
-
-   # Windows
-   ipconfig | findstr "IPv4" | findstr /v "127.0.0.1"
-   ```
-
-2. **检查服务是否启动**（助手自动执行）
-
-   ```bash
-   # macOS/Linux
-   lsof -i :25808
-
-   # Windows
-   netstat -an | findstr 25808
-   ```
-
-3. **访问地址**（助手直接提供给用户）
-   - **本地访问**：`http://localhost:25808`
-   - **网络访问**：`http://<获取到的局域网IP>:25808`（如果启用了远程模式）
-   - **初始密码**：首次启动时会在终端显示，助手应提醒用户查看终端输出或直接提供
-
-### 使用步骤
-
-1. 在运行 AionUi 的电脑上启动 WebUI（使用 `--remote` 参数）
-2. 获取局域网 IP 地址
-3. 在同一局域网的其他设备浏览器中访问 `http://<局域网IP>:25808`
-4. 使用 admin 用户名和初始密码登录
+1. 确保远程设备与 AionUi 电脑在同一 WiFi 网络
+2. 在远程设备的浏览器中，粘贴并访问复制的地址
+3. 使用设置界面中显示的**用户名**和**密码**登录
 
 ---
 
@@ -161,24 +134,19 @@ aionui --webui --remote
 
 ### 配置步骤
 
-#### Step 1: 在 AionUi 电脑上启动 WebUI
+#### Step 1: 在 AionUi 电脑上配置 WebUI
 
-在运行 AionUi 的电脑上，打开 AionUi 应用，从界面启动 WebUI 服务：
+1. **打开 WebUI 设置界面**：
+   - 在 AionUi 主界面，点击左下角的**设置图标**
+   - 点击 **"WebUI"** 选项
 
-1. 打开 AionUi 应用
-2. 点击设置（Settings）
-3. 找到 WebUI 配置
-4. 启用 WebUI 并开启"允许远程访问"
-5. 记录显示的访问地址和初始密码
+2. **启用 WebUI**：
+   - 将 **"启用 WebUI"** 开关切换到**开启**状态
+   - **注意**：使用 Tailscale 时，**不需要**启用"允许远程访问"（Tailscale 会处理网络）
 
-**或使用命令行：**
-
-```bash
-# 启动 WebUI（不需要 --remote，因为 Tailscale 会处理网络）
-npm run webui
-# 或
-AionUi --webui
-```
+3. **记录访问信息**：
+   - 记录显示的**本地访问地址**（`http://localhost:25808`）
+   - 记录**用户名**和**密码**
 
 #### Step 2: 在 AionUi 电脑上安装并登录 Tailscale
 
@@ -186,7 +154,7 @@ AionUi --webui
 2. 登录 Tailscale 账户（首次使用需要注册）
 3. 确保 Tailscale 显示"Connected"状态
 
-#### Step 3: 获取 Tailscale IP 并组合访问 URL
+#### Step 3: 获取 Tailscale IP
 
 1. 在 AionUi 电脑上，打开 Tailscale 应用
 2. 查看显示的 Tailscale IP 地址（例如：`100.x.x.x`）
@@ -202,7 +170,7 @@ AionUi --webui
 
 1. 打开浏览器
 2. 访问 `http://<Tailscale_IP>:25808`（使用 Step 3 中的地址）
-3. 使用 admin 用户名和初始密码登录
+3. 使用设置界面中显示的**用户名**和**密码**登录
 
 ### 常见命令
 
@@ -238,71 +206,27 @@ tailscale status --json
 
 ### Linux 服务器部署（推荐）
 
-#### Step 1: 创建 systemd 服务文件
+#### Step 1: 在服务器上安装 AionUi
 
-创建 `/etc/systemd/system/aionui-webui.service`：
+按照 AionUi 安装指南在服务器上安装 AionUi 应用。
 
-```ini
-[Unit]
-Description=AionUi WebUI Service
-After=network.target
+#### Step 2: 通过设置界面配置 WebUI
 
-[Service]
-Type=simple
-User=YOUR_USERNAME
-WorkingDirectory=/path/to/AionUi
-ExecStart=/path/to/AionUi/AionUi --webui --remote
-Restart=on-failure
-RestartSec=10
-Environment="NODE_ENV=production"
+1. **打开 WebUI 设置界面**：
+   - 如果服务器有图形界面，直接打开 AionUi 应用
+   - 如果服务器无图形界面，需要通过 SSH 端口转发或 VNC 访问图形界面
 
-[Install]
-WantedBy=multi-user.target
-```
+2. **配置 WebUI**：
+   - 点击左下角的**设置图标**
+   - 点击 **"WebUI"** 选项
+   - 将 **"启用 WebUI"** 开关切换到**开启**状态
+   - 将 **"允许远程访问"** 开关切换到**开启**状态
 
-**重要配置说明：**
+3. **记录访问信息**：
+   - 记录显示的**网络访问地址**（`http://<服务器IP>:25808`）
+   - 记录**用户名**和**密码**
 
-- `User`: 替换为运行 AionUi 的用户名
-- `WorkingDirectory`: 替换为 AionUi 安装目录
-- `ExecStart`: 替换为 AionUi 可执行文件的完整路径
-
-#### Step 2: 添加配置（可选）
-
-如果需要自定义端口，可以创建配置文件 `webui.config.json`：
-
-```json
-{
-  "port": 25808,
-  "allowRemote": true
-}
-```
-
-配置文件位置：
-
-- Linux: `~/.config/AionUi/webui.config.json`
-- macOS: `~/Library/Application Support/AionUi/webui.config.json`
-- Windows: `%APPDATA%/AionUi/webui.config.json`
-
-#### Step 3: 启用并启动服务
-
-```bash
-# 重新加载 systemd
-sudo systemctl daemon-reload
-
-# 启用服务（开机自启）
-sudo systemctl enable aionui-webui.service
-
-# 启动服务
-sudo systemctl start aionui-webui.service
-
-# 检查状态
-sudo systemctl status aionui-webui.service
-
-# 查看日志
-sudo journalctl -u aionui-webui.service -f
-```
-
-#### Step 4: 配置防火墙
+#### Step 3: 配置防火墙
 
 ```bash
 # Ubuntu/Debian (ufw)
@@ -316,6 +240,10 @@ sudo firewall-cmd --reload
 # 或使用 iptables
 sudo iptables -A INPUT -p tcp --dport 25808 -j ACCEPT
 ```
+
+#### Step 4: 配置开机自启（可选）
+
+如果需要 AionUi 开机自启，可以配置 systemd 服务。但建议通过 AionUi 设置界面管理 WebUI，而不是通过命令行。
 
 #### Step 5: 获取访问地址
 
@@ -335,50 +263,16 @@ sudo iptables -A INPUT -p tcp --dport 25808 -j ACCEPT
 
 ### macOS 服务器部署
 
-#### Step 1: 创建 LaunchAgent 配置文件
+#### Step 1: 在服务器上安装 AionUi
 
-创建 `~/Library/LaunchAgents/com.aionui.webui.plist`：
+按照 AionUi 安装指南在 macOS 服务器上安装 AionUi 应用。
 
-```xml
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0">
-<dict>
-    <key>Label</key>
-    <string>com.aionui.webui</string>
-    <key>ProgramArguments</key>
-    <array>
-        <string>/Applications/AionUi.app/Contents/MacOS/AionUi</string>
-        <string>--webui</string>
-        <string>--remote</string>
-    </array>
-    <key>RunAtLoad</key>
-    <true/>
-    <key>KeepAlive</key>
-    <true/>
-    <key>StandardOutPath</key>
-    <string>/tmp/aionui-webui.log</string>
-    <key>StandardErrorPath</key>
-    <string>/tmp/aionui-webui.error.log</string>
-</dict>
-</plist>
-```
+#### Step 2: 通过设置界面配置 WebUI
 
-#### Step 2: 启动服务
-
-```bash
-# 加载服务
-launchctl load ~/Library/LaunchAgents/com.aionui.webui.plist
-
-# 启动服务
-launchctl start com.aionui.webui
-
-# 检查状态
-launchctl list | grep aionui
-
-# 查看日志
-tail -f /tmp/aionui-webui.log
-```
+1. 打开 AionUi 应用
+2. 点击左下角的**设置图标**
+3. 点击 **"WebUI"** 选项
+4. 将 **"启用 WebUI"** 和 **"允许远程访问"** 开关切换到**开启**状态
 
 #### Step 3: 配置防火墙
 
@@ -390,221 +284,68 @@ sudo /usr/libexec/ApplicationFirewall/socketfilterfw --unblockapp /Applications/
 
 ---
 
-## 命令行选项
+## 设置界面功能说明
 
-### 基本选项
+### WebUI 服务配置
 
-| 选项               | 描述                     |
-| ------------------ | ------------------------ |
-| `--webui`          | 启动 WebUI 模式          |
-| `--remote`         | 允许远程网络访问         |
-| `--webui --remote` | 组合使用，启动远程 WebUI |
+- **启用 WebUI**：启动/停止 WebUI 服务
+- **允许远程访问**：启用后，允许局域网内的其他设备访问
+- **访问地址**：显示本地和网络访问地址（可点击复制）
 
-### 端口配置
+### 登录信息
 
-可以通过以下方式自定义端口（优先级从高到低）：
+- **用户名**：默认 `admin`（可点击复制）
+- **密码**：
+  - 首次启动时显示初始密码（可点击复制）
+  - 如果密码已隐藏，点击**重置图标**可以重置密码并显示新密码
+  - 点击**修改密码**可以设置自定义密码
 
-1. **命令行参数**：`--port 8080` 或 `--webui-port 8080`
-2. **环境变量**：`AIONUI_PORT=8080` 或 `PORT=8080`
-3. **配置文件**：`webui.config.json` 中的 `port` 字段
+### 二维码登录
 
-示例：
+- 仅在启用远程访问时显示
+- 使用手机扫描二维码，即可在手机浏览器中自动登录
+- 二维码有效期 5 分钟，过期后点击"刷新二维码"
 
-```bash
-# 使用命令行参数
-AionUi --webui --remote --port 8080
+### Channels 配置
 
-# 使用环境变量
-AIONUI_PORT=8080 AionUi --webui --remote
-
-# 使用配置文件
-# 编辑 ~/.config/AionUi/webui.config.json
-{
-  "port": 8080,
-  "allowRemote": true
-}
-```
-
----
-
-## 用户配置文件
-
-从 v1.5.0+ 开始，可以在用户数据目录中创建 `webui.config.json` 来持久化 WebUI 配置：
-
-| 平台    | 配置文件位置                                             |
-| ------- | -------------------------------------------------------- |
-| Windows | `%APPDATA%/AionUi/webui.config.json`                     |
-| macOS   | `~/Library/Application Support/AionUi/webui.config.json` |
-| Linux   | `~/.config/AionUi/webui.config.json`                     |
-
-示例配置：
-
-```json
-{
-  "port": 25808,
-  "allowRemote": true
-}
-```
-
-**优先级**：命令行参数 > 环境变量 > 配置文件
-
----
-
-## 密码管理
-
-### 获取初始密码
-
-首次启动 WebUI 时，初始密码会在控制台输出。请妥善保管。
-
-### 重置密码
-
-如果忘记密码，可以使用 `--resetpass` 命令重置：
-
-**Windows:**
-
-```cmd
-"C:\Program Files\AionUi\AionUi.exe" --resetpass
-# 或指定用户
-"C:\Program Files\AionUi\AionUi.exe" --resetpass username
-```
-
-**macOS:**
-
-```bash
-/Applications/AionUi.app/Contents/MacOS/AionUi --resetpass
-# 或指定用户
-/Applications/AionUi.app/Contents/MacOS/AionUi --resetpass username
-```
-
-**Linux:**
-
-```bash
-aionui --resetpass
-# 或指定用户
-aionui --resetpass username
-```
-
-**注意**：重置密码会生成新的随机密码，所有现有的 JWT token 将失效。
-
----
-
-## 检查 WebUI 状态
-
-### 方法 1：检查端口
-
-```bash
-# 检查默认端口是否被占用
-lsof -i :25808
-
-# 或使用 netstat (Linux/Windows)
-netstat -an | grep 25808
-```
-
-### 方法 2：检查进程
-
-```bash
-# 检查是否有 WebUI 进程在运行
-ps aux | grep "webui\|AionUi" | grep -v grep
-```
-
-### 方法 3：尝试访问
-
-```bash
-# 尝试访问本地地址
-curl http://localhost:25808
-```
-
-### 方法 4：检查服务状态（Linux systemd）
-
-```bash
-sudo systemctl status aionui-webui.service
-```
+- 配置 Telegram、Lark 等聊天平台的 Bot Token
+- 实现通过 IM 应用访问 AionUi
 
 ---
 
 ## 故障排查
 
-### 端口被占用
+### WebUI 无法启动
 
-如果 25808 端口被占用：
+1. **检查端口是否被占用**：
+   - 在设置界面中，如果启动失败，通常会显示错误信息
+   - 如果端口被占用，可以修改配置文件中的端口（见下方"自定义端口"）
 
-1. **查找占用端口的进程**
-
-   ```bash
-   lsof -i :25808
-   # 或
-   sudo netstat -tlnp | grep 25808
-   ```
-
-2. **停止占用端口的进程**，或使用其他端口：
-   ```bash
-   AionUi --webui --remote --port 8080
-   ```
-
-### 无法远程访问
-
-1. **确认使用了 `--remote` 参数**
-2. **检查防火墙设置**
+2. **检查防火墙设置**：
    - Linux: `sudo ufw status` 或 `sudo firewall-cmd --list-all`
    - macOS: 系统偏好设置 > 安全性与隐私 > 防火墙
    - Windows: 控制面板 > Windows Defender 防火墙
+
+### 无法远程访问
+
+1. **确认已启用"允许远程访问"**：
+   - 在 WebUI 设置界面中，检查"允许远程访问"开关是否已开启
+
+2. **检查防火墙设置**（见上方）
+
 3. **确认设备在同一局域网**（局域网连接方式）
-4. **检查 IP 地址是否正确**
+
+4. **检查 IP 地址是否正确**：
+   - 在设置界面中查看显示的"网络访问地址"
+
 5. **检查云服务器安全组规则**（服务器部署方式）
 
-### 服务无法启动（Linux systemd）
+### 忘记密码
 
-1. **检查 AionUi 路径是否正确**
-
-   ```bash
-   which AionUi
-   # 或
-   whereis AionUi
-   ```
-
-2. **检查用户权限**
-
-   ```bash
-   # 确保服务文件中的用户有执行权限
-   ls -l /path/to/AionUi/AionUi
-   ```
-
-3. **查看详细错误日志**
-   ```bash
-   sudo journalctl -u aionui-webui.service -n 50
-   ```
-
-### 无法从互联网访问服务器
-
-1. **检查防火墙是否开放端口 25808**
-2. **检查云服务器安全组规则是否允许端口 25808**
-3. **确认 AionUi 使用 `--remote` 参数启动**
-4. **验证服务正在运行**：`sudo systemctl status aionui-webui.service`
-
-### 检查端口是否开放
-
-```bash
-# 使用 telnet 测试
-telnet Your-Server-IP 25808
-
-# 或使用 nc (netcat)
-nc -zv Your-Server-IP 25808
-
-# 检查本地端口监听
-sudo netstat -tlnp | grep 25808
-```
-
-### 服务自动重启失败
-
-1. **查看日志中的具体错误**
-
-   ```bash
-   sudo journalctl -u aionui-webui.service
-   ```
-
-2. **确认 AionUi 可执行文件路径正确**
-3. **检查磁盘空间**：`df -h`
-4. **检查内存使用**：`free -h`
+1. **在设置界面中重置**：
+   - 在 WebUI 设置界面中，找到"登录信息"部分
+   - 点击密码旁边的**重置图标**
+   - 新密码会显示在界面上，可以点击复制
 
 ### Tailscale 相关问题
 
@@ -618,7 +359,32 @@ sudo netstat -tlnp | grep 25808
 
 - 确认两端设备都已登录 Tailscale
 - 检查 Tailscale 状态：`tailscale status`
-- 确认 AionUi WebUI 已启动
+- 确认 AionUi WebUI 已在设置界面中启用
+
+---
+
+## 自定义端口
+
+如果需要使用非默认端口（25808），可以通过配置文件设置：
+
+### 配置文件位置
+
+| 平台    | 配置文件位置                                             |
+| ------- | -------------------------------------------------------- |
+| Windows | `%APPDATA%/AionUi/webui.config.json`                     |
+| macOS   | `~/Library/Application Support/AionUi/webui.config.json` |
+| Linux   | `~/.config/AionUi/webui.config.json`                     |
+
+### 配置示例
+
+```json
+{
+  "port": 8080,
+  "allowRemote": true
+}
+```
+
+**注意**：修改配置文件后，需要在设置界面中重启 WebUI 服务才能生效。
 
 ---
 
@@ -626,13 +392,13 @@ sudo netstat -tlnp | grep 25808
 
 ### 基本安全
 
-1. **修改初始密码**：首次启动后立即修改默认密码
+1. **修改初始密码**：首次启动后，在设置界面中立即修改密码
 2. **使用强密码**：密码至少 8 位，包含字母、数字和特殊字符
 3. **定期更新密码**：建议定期更换密码
 
 ### 远程访问安全
 
-1. **仅在受信任的网络中使用 `--remote`**
+1. **仅在受信任的网络中使用远程访问**
 2. **使用 Tailscale**：跨网络访问时，Tailscale 提供加密连接，更安全
 3. **配置防火墙**：仅允许必要的 IP 地址访问
 4. **使用 HTTPS**：生产环境建议配置 HTTPS（需要反向代理如 Nginx）
@@ -677,29 +443,16 @@ sudo netstat -tlnp | grep 25808
 
 ## 快速参考
 
-### 启动命令速查
+### 设置界面操作
 
-```bash
-# 开发环境 - 本地
-npm run webui
+1. **打开设置**：点击 AionUi 左下角的**设置图标** → 点击 **"WebUI"**
+2. **启用 WebUI**：将"启用 WebUI"开关切换到**开启**状态
+3. **启用远程访问**：将"允许远程访问"开关切换到**开启**状态（如果需要）
+4. **复制访问地址**：点击访问地址旁边的**复制图标**
+5. **复制密码**：点击密码旁边的**复制图标**（如果可见）
+6. **重置密码**：点击密码旁边的**重置图标**
 
-# 开发环境 - 远程
-npm run webui:remote
-
-# 生产环境 - 本地
-npm run webui:prod
-
-# 生产环境 - 远程
-npm run webui:prod:remote
-
-# 已安装应用 - 远程
-AionUi --webui --remote
-
-# 自定义端口
-AionUi --webui --remote --port 8080
-```
-
-### 常用检查命令
+### 常用检查命令（仅用于故障排查）
 
 ```bash
 # 检查端口
@@ -713,23 +466,4 @@ ifconfig | grep "inet " | grep -v 127.0.0.1
 
 # 测试连接
 curl http://localhost:25808
-```
-
-### 服务管理（Linux）
-
-```bash
-# 启动服务
-sudo systemctl start aionui-webui.service
-
-# 停止服务
-sudo systemctl stop aionui-webui.service
-
-# 重启服务
-sudo systemctl restart aionui-webui.service
-
-# 查看状态
-sudo systemctl status aionui-webui.service
-
-# 查看日志
-sudo journalctl -u aionui-webui.service -f
 ```

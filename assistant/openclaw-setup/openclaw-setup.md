@@ -202,21 +202,26 @@ I've explained OpenClaw's capabilities and permission scope. OpenClaw is a power
    - Explain required info (Bot Token/credentials) → Get consent → Configure (environment-synchronized format) → Verify
 4. **Option B: Start AionUi WebUI Remote Mode**
    - **Must use aionui-webui-setup skill**: Consult `references/aionui-webui.md`
-   - **Detect environment first** (execute directly):
-     - Check if current directory is AionUi project directory: Check if `package.json` exists and contains `webui` script
-     - If not project directory, check if AionUi app is installed:
-       - macOS: `/Applications/AionUi.app/Contents/MacOS/AionUi`
-       - Linux: `which aionui` or `/opt/AionUi/aionui`
-       - Windows: `"C:\Program Files\AionUi\AionUi.exe"`
-   - Ask user needs: Same WiFi, cross-network access, or server deployment? → **Wait for user reply**
-   - After user replies:
-     - **Development environment** (in project directory): Execute `npm run webui:remote` directly (use environment-synchronized format)
-     - **Production environment** (installed app): Use detected path to execute `--webui --remote` (use environment-synchronized format)
-     - **Immediately get and display access information after startup** (execute directly): Reference the "获取访问地址" (Get Access Address) section in `aionui-webui-setup` skill's `references/aionui-webui.md`, actively get LAN IP, check port status, and directly provide to user:
-       - Local access URL and network access URL
-       - Initial password location reminder
-       - Complete usage instructions
-   - **Important**: Do not attempt to install `@aionui/webui` or similar npm packages. WebUI is a built-in feature of AionUi, not a separate package.
+   - **Workflow**:
+     1. Ask user needs: Same WiFi, cross-network access, or server deployment? → **Wait for user reply**
+     2. After user replies, **guide user to AionUi settings interface**:
+        - **Open settings interface**: Clearly tell user how to open it
+          - "Please click the **Settings icon** (gear icon) at the bottom left of AionUi"
+          - "In the settings menu, click the **'WebUI'** option"
+          - "Enter the WebUI configuration interface"
+        - **Configuration steps**: Follow `aionui-webui-setup` skill's `references/aionui-webui.md` documentation to guide user:
+          - Step 1: Enable WebUI (switch "Enable WebUI" toggle to ON)
+          - Step 2: Enable remote access (if needed, switch "Allow Remote Access" toggle to ON)
+          - Step 3: Get access information (tell user they can find access URL, username, and password in settings interface)
+        - **Provide specific guidance based on user needs**:
+          - **LAN connection**: Guide to enable WebUI and remote access, then tell user how to access from devices on same WiFi
+          - **Tailscale**: Guide to enable WebUI (no remote access needed), then guide to install Tailscale
+          - **Server deployment**: Guide to configure via settings interface on server, then configure firewall
+   - **Key principles**:
+     - **All configuration should be done through settings interface**, do not use command line methods
+     - **Guided instructions**: Use format like "Click xxx, go to xxxx", clearly tell user operation steps
+     - **Don't attempt to install `@aionui/webui` or similar npm packages**: WebUI is a built-in feature of AionUi, not a separate package
+     - **Settings interface displays all information**: Access URL, username, password can all be viewed and copied directly in settings interface
 
 ---
 
@@ -251,11 +256,16 @@ Contains comprehensive OpenClaw documentation:
 
 **How to use**:
 
-1. Consult `references/aionui-webui.md`
-2. Ask user needs (same WiFi/cross-network/server deployment)
-3. Choose solution based on needs (LAN/Tailscale/server deployment)
-4. Reference documentation steps to execute configuration
-5. If problems occur, reference troubleshooting section in documentation
+1. **Directly consult `references/aionui-webui.md`** and guide user to complete configuration following the documentation
+2. Documentation contains complete guided instructions:
+   - **How to open settings interface**: Clearly tell user where to click and where to go
+   - **Configuration steps**: Detailed guidance for Step 1, Step 2, Step 3
+   - **Get access information**: Tell user where in settings interface they can find access URL, username, and password
+   - **Troubleshooting guide**: Solutions for common issues
+3. **Key**:
+   - **All configuration should be done through settings interface**, do not use command line methods
+   - **Use guided instructions**: Use format like "Click xxx, go to xxxx"
+   - **Don't repeat detailed steps from documentation**, directly reference documentation to guide user
 
 ---
 
@@ -319,6 +329,6 @@ Contains comprehensive OpenClaw documentation:
 5. **Post-installation guidance**: Inform user can start using (homepage or configure remote)
 6. **Remote usage**: Introduce both options (IM Channels vs WebUI) → User chooses → **Wait for reply** → Configure
 7. **Skill usage**:
-   - OpenClaw questions → `openclaw-setup` skill
-   - WebUI configuration → **Must use `aionui-webui-setup` skill** (consult `references/aionui-webui.md`)
+   - OpenClaw questions → `openclaw-setup` skill (consult corresponding documentation)
+   - WebUI configuration → **Must use `aionui-webui-setup` skill** (directly consult `references/aionui-webui.md` and follow documentation, don't repeat detailed steps from documentation)
 8. **Don't assume**: Don't assume tools exist, if detection inconsistent use environment synchronization method to re-check
