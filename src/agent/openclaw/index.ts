@@ -691,9 +691,13 @@ export class OpenClawAgent {
         responseMessage.type = 'plan';
         responseMessage.data = message.content;
         break;
+      case 'tool_group':
+        responseMessage.type = 'tool_group';
+        responseMessage.data = message.content;
+        break;
       default:
-        responseMessage.type = 'content';
-        responseMessage.data = typeof message.content === 'string' ? message.content : JSON.stringify(message.content);
+        // Skip unknown message types to avoid sending raw JSON to external channels
+        return;
     }
 
     this.onStreamEvent(responseMessage);

@@ -5,6 +5,7 @@
  */
 
 import WorkerManage from '@/process/WorkerManage';
+import { getDatabase } from '@/process/database';
 import type BaseAgentManager from '@/process/task/BaseAgentManager';
 import { composeMessage, transformMessage, type TMessage } from '../../common/chatLib';
 import { uuid } from '../../common/utils';
@@ -113,7 +114,6 @@ export class ChannelMessageService {
       // insert: true 表示新消息，false 表示更新现有消息
       // insert: true means new message, false means update existing message
 
-      console.log('%c [  ]-130', 'font-size:13px; background:pink; color:#bf2c9f;', type, msg);
       const isInsert = type === 'insert';
       stream.callback(msg, isInsert);
     });
@@ -142,7 +142,15 @@ export class ChannelMessageService {
     // Get task
     let task: BaseAgentManager<unknown>;
     try {
-      task = await WorkerManage.getTaskByIdRollbackBuild(conversationId);
+      // 检查会话来源，如果来自 Channel 则开启 yoloMode (自动同意)
+      // Check conversation source, enable yoloMode if it's from a Channel
+      const db = getDatabase();
+      const dbResult = db.getConversation(conversationId);
+      const isFromChannel = dbResult.success && (dbResult.data?.source === 'lark' || dbResult.data?.source === 'telegram');
+
+      task = await WorkerManage.getTaskByIdRollbackBuild(conversationId, {
+        yoloMode: isFromChannel,
+      });
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : 'Failed to get conversation task';
       console.error(`[ChannelMessageService] Failed to get task:`, errorMsg);

@@ -189,6 +189,8 @@ export type TChatConversation =
         'openclaw-gateway',
         {
           workspace?: string;
+          backend?: AcpBackendAll;
+          agentName?: string;
           customWorkspace?: boolean;
           /** Gateway configuration */
           gateway?: {
@@ -201,6 +203,16 @@ export type TChatConversation =
           };
           /** Session key for resume */
           sessionKey?: string;
+          /** Runtime validation snapshot used for post-switch strong checks */
+          runtimeValidation?: {
+            expectedWorkspace?: string;
+            expectedBackend?: string;
+            expectedAgentName?: string;
+            expectedCliPath?: string;
+            expectedModel?: string;
+            expectedIdentityHash?: string | null;
+            switchedAt?: number;
+          };
           /** 启用的 skills 列表 / Enabled skills list */
           enabledSkills?: string[];
           /** 预设助手 ID / Preset assistant ID */

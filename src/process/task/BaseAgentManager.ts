@@ -22,17 +22,41 @@ class BaseAgentManager<Data, ConfirmationOption extends any = any> extends ForkT
   protected conversation_id: string;
   protected confirmations: Array<IConfirmation<ConfirmationOption>> = [];
   status: 'pending' | 'running' | 'finished' | undefined;
+
+  /**
+   * Whether this agent is in yolo mode (auto-approve)
+   */
+  protected yoloMode: boolean = false;
+
   constructor(type: AgentType, data: Data) {
     super(path.resolve(__dirname, type + '.js'), {
       type: type,
       data: data,
     });
     this.type = type;
+
+    // Set yoloMode from data if present
+    if (data && typeof data === 'object' && 'yoloMode' in data) {
+      this.yoloMode = !!(data as any).yoloMode;
+    }
   }
   protected init(): void {
     super.init();
   }
   protected addConfirmation(data: IConfirmation<ConfirmationOption>) {
+    // If yoloMode is active, attempt to auto-confirm instead of adding
+    if (this.yoloMode && data.options && data.options.length > 0) {
+      // Select the first "allow" option (usually proceed_once or similar)
+      // Most agents put the positive confirmation as the first option
+      const autoOption = data.options[0];
+
+      // Delay slightly to allow the agent to reach a stable state if needed
+      setTimeout(() => {
+        void this.confirm(data.id, data.callId, autoOption.value);
+      }, 50);
+      return;
+    }
+
     const origin = this.confirmations.find((p) => p.id === data.id);
     if (origin) {
       Object.assign(origin, data);

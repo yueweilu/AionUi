@@ -1041,6 +1041,17 @@ const Guid: React.FC = () => {
             defaultFiles: files,
             workspace: finalWorkspace,
             customWorkspace: isCustomWorkspace,
+            backend: openclawAgentInfo?.backend,
+            cliPath: openclawAgentInfo?.cliPath,
+            agentName: openclawAgentInfo?.name,
+            runtimeValidation: {
+              expectedWorkspace: finalWorkspace,
+              expectedBackend: openclawAgentInfo?.backend,
+              expectedAgentName: openclawAgentInfo?.name,
+              expectedCliPath: openclawAgentInfo?.cliPath,
+              expectedModel: currentModel?.useModel,
+              switchedAt: Date.now(),
+            },
             // Gateway configuration is handled by OpenClawAgentManager
             // 启用的 skills 列表（通过 SkillManager 加载）/ Enabled skills list (loaded via SkillManager)
             enabledSkills: isPreset ? enabledSkills : undefined,

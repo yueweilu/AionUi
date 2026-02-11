@@ -108,10 +108,10 @@ export class LarkPlugin extends BasePlugin {
         appId,
         appSecret,
         domain: lark.Domain.Feishu,
-        loggerLevel: lark.LoggerLevel.debug, // Enable debug logging
+        loggerLevel: lark.LoggerLevel.info,
       });
 
-      console.log(`[LarkPlugin] WSClient created with debug logging enabled`);
+      console.log(`[LarkPlugin] WSClient created`);
 
       // Start WebSocket connection with event dispatcher
       // Note: wsClient.start() may not resolve immediately, the 'client ready' log from SDK indicates success
@@ -354,14 +354,12 @@ export class LarkPlugin extends BasePlugin {
     this.eventDispatcher.register({
       // Handle incoming messages
       'im.message.receive_v1': async (data: Record<string, unknown>) => {
-        console.log(`[LarkPlugin] Received im.message.receive_v1 event:`, JSON.stringify(data, null, 2));
         await this.handleMessageEvent({ event: data });
       },
 
       // Handle card action callbacks (button clicks)
       // Event name: card.action.trigger
       'card.action.trigger': async (data: Record<string, unknown>) => {
-        console.log(`[LarkPlugin] Received card.action.trigger event:`, JSON.stringify(data, null, 2));
         // Don't await - process in background to avoid 200340 timeout
         // Lark requires immediate response within 3 seconds
         void this.handleCardAction({ event: data });
@@ -372,7 +370,6 @@ export class LarkPlugin extends BasePlugin {
       // Handle bot menu clicks (custom menu in chat)
       // Event name: application.bot.menu_v6
       'application.bot.menu_v6': async (data: Record<string, unknown>) => {
-        console.log(`[LarkPlugin] Received application.bot.menu_v6 event:`, JSON.stringify(data, null, 2));
         await this.handleBotMenuEvent({ event: data });
       },
     });
