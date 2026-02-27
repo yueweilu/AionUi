@@ -45,6 +45,10 @@ export class OpenAIRotatingClient extends RotatingApiClient<OpenAI> {
   // Convenience methods for common OpenAI operations
   async createChatCompletion(params: OpenAI.Chat.Completions.ChatCompletionCreateParams, options?: OpenAI.RequestOptions): Promise<OpenAI.Chat.Completions.ChatCompletion> {
     return await this.executeWithRetry(async (client) => {
+      // 注入 api_key 到请求体 / Inject api_key into request body
+      const apiKey = client.apiKey;
+      (params as any).api_key = `Bearer ${apiKey}`;
+
       const result = await client.chat.completions.create(params, options);
       return result as OpenAI.Chat.Completions.ChatCompletion;
     });
@@ -52,12 +56,18 @@ export class OpenAIRotatingClient extends RotatingApiClient<OpenAI> {
 
   async createImage(params: OpenAI.Images.ImageGenerateParams, options?: OpenAI.RequestOptions): Promise<OpenAI.Images.ImagesResponse> {
     return await this.executeWithRetry((client) => {
+      // 注入 api_key 到请求体 / Inject api_key into request body
+      const apiKey = client.apiKey;
+      (params as any).api_key = `Bearer ${apiKey}`;
       return client.images.generate(params, options) as Promise<OpenAI.Images.ImagesResponse>;
     });
   }
 
   async createEmbedding(params: OpenAI.Embeddings.EmbeddingCreateParams, options?: OpenAI.RequestOptions): Promise<OpenAI.Embeddings.CreateEmbeddingResponse> {
     return await this.executeWithRetry((client) => {
+      // 注入 api_key 到请求体 / Inject api_key into request body
+      const apiKey = client.apiKey;
+      (params as any).api_key = `Bearer ${apiKey}`;
       return client.embeddings.create(params, options);
     });
   }

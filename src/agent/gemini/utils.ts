@@ -82,6 +82,13 @@ export const processGeminiStreamEvents = async (stream: AsyncIterable<ServerGemi
 
   try {
     for await (const event of stream) {
+      // [Debug Log] 记录所有流式事件
+      const logFilePath = path.join(process.cwd(), 'debug_stream_events.log');
+      fs.appendFileSync(logFilePath, `[${new Date().toISOString()}] Event Type: ${event.type}\n`);
+      if (event.type === 'tool_call_request' || event.type === 'tool_calls') {
+        fs.appendFileSync(logFilePath, `Data: ${JSON.stringify((event as any).value)}\n`);
+      }
+
       // 记录收到事件，更新心跳时间
       monitor.recordEvent();
 
@@ -100,6 +107,42 @@ export const processGeminiStreamEvents = async (stream: AsyncIterable<ServerGemi
             // Extract content value
             const contentValue = (event as unknown as { value: unknown }).value;
             const contentText = typeof contentValue === 'string' ? contentValue : '';
+
+            // [Patch for Custom DeepSeek] Check if content is actually a JSON string containing tool_calls
+            // [DeepSeek 自定义接口补丁] 检查内容是否为包含 tool_calls 的 JSON 字符串
+            if (contentText.trim().startsWith('{') && contentText.includes('"tool_calls"')) {
+              try {
+                const jsonContent = JSON.parse(contentText);
+                // Check if it matches the structure: { choices: [{ message: { tool_calls: [...] } }] }
+                // 检查是否匹配非流式响应结构
+                const toolCalls = jsonContent?.choices?.[0]?.message?.tool_calls;
+
+                if (Array.isArray(toolCalls) && toolCalls.length > 0) {
+                  console.log('[DeepSeek Patch] Detected tool_calls in content, converting to tool_call_request');
+
+                  for (const toolCall of toolCalls) {
+                    const toolCallRequest = {
+                      callId: toolCall.id || `call_${Date.now()}`,
+                      name: toolCall.function?.name,
+                      args: toolCall.function?.arguments, // Will be normalized later
+                    };
+
+                    // Emit as tool_call_request
+                    // 发送为 tool_call_request 事件
+                    onStreamEvent({
+                      type: ServerGeminiEventType.ToolCallRequest,
+                      data: toolCallRequest,
+                    });
+                  }
+                  // Skip emitting as content since it was a tool call
+                  // 跳过发送为 content 事件，因为它是工具调用
+                  break;
+                }
+              } catch (e) {
+                // Not valid JSON or not the structure we expect, treat as normal content
+                // 不是有效的 JSON 或不是我们期望的结构，作为普通内容处理
+              }
+            }
 
             // Check if content contains <think> or <thinking> tags (common in proxy services like newapi)
             // 检查内容是否包含 <think> 或 <thinking> 标签（中转站如 newapi 常见格式）
@@ -285,8 +328,20 @@ export const processGeminiStreamEvents = async (stream: AsyncIterable<ServerGemi
  * 某些模型可能返回不同的参数名称，需要映射到工具期望的标准名称
  * Normalize tool parameter names - some models may return different param names
  */
-const normalizeToolParams = (toolName: string, args: Record<string, unknown>): Record<string, unknown> => {
-  const normalized = { ...args };
+export const normalizeToolParams = (toolName: string, args: Record<string, unknown> | string): Record<string, unknown> => {
+  let normalized: Record<string, unknown>;
+
+  // 1. 如果 args 是字符串，先解析为对象
+  if (typeof args === 'string') {
+    try {
+      normalized = JSON.parse(args);
+    } catch (e) {
+      console.error('[normalizeToolParams] Failed to parse args string:', args, e);
+      return {};
+    }
+  } else {
+    normalized = { ...args };
+  }
 
   // Strip leading "@" for file references (users often write @file.ext)
   if (typeof normalized.file_path === 'string' && normalized.file_path.startsWith('@')) {

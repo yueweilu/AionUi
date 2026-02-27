@@ -28,7 +28,7 @@ import { loadSettings } from './cli/settings';
 import { globalToolCallGuard, type StreamConnectionEvent } from './cli/streamResilience';
 import { ConversationToolConfig } from './cli/tools/conversation-tool-config';
 import { mapToDisplay, type TrackedToolCall } from './cli/useReactToolScheduler';
-import { getPromptCount, handleCompletedTools, processGeminiStreamEvents, startNewPrompt } from './utils';
+import { getPromptCount, handleCompletedTools, normalizeToolParams, processGeminiStreamEvents, startNewPrompt } from './utils';
 import path from 'path';
 import os from 'os';
 
@@ -300,6 +300,35 @@ export class GeminiAgent {
   private async initialize(): Promise<void> {
     const path = this.workspace;
 
+    // 拦截全局 fetch 以支持在 Body 中注入 api_key
+    // Intercept global fetch to support injecting api_key in Body
+    const originalFetch = global.fetch;
+    global.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = input.toString();
+      const isChatRequest = url.includes('/chat/completions') || url.includes('/completions');
+
+      if (isChatRequest && init?.method === 'POST' && init.body && typeof init.body === 'string') {
+        try {
+          const body = JSON.parse(init.body);
+          const apiKey = process.env.OPENAI_API_KEY || process.env.GEMINI_API_KEY || process.env.ANTHROPIC_API_KEY;
+
+          if (apiKey && !body.api_key) {
+            body.api_key = `Bearer ${apiKey}`;
+            init.body = JSON.stringify(body);
+            // 同时清除 Authorization Header 避免冲突（可选，根据需求）
+            // if (init.headers) {
+            //   const headers = new Headers(init.headers);
+            //   headers.delete('Authorization');
+            //   init.headers = headers;
+            // }
+          }
+        } catch (e) {
+          console.error('[GeminiAgent] Failed to parse/inject api_key into body:', e);
+        }
+      }
+      return originalFetch(input, init);
+    };
+
     const settings = loadSettings(path).merged;
     if (this.contextFileName) {
       settings.contextFileName = this.contextFileName;
@@ -511,6 +540,22 @@ export class GeminiAgent {
       (data) => {
         if (data.type === 'tool_call_request') {
           const toolRequest = data.data as ToolCallRequestInfo;
+
+          // [File Debug Log] 写入日志到文件
+          const logFilePath = path.join(process.cwd(), 'debug_tool_calls.log');
+          const logContent = `\n[${new Date().toISOString()}] 
+Tool Name: ${toolRequest.name}
+Args Type: ${typeof toolRequest.args}
+Raw Args: ${JSON.stringify(toolRequest.args)}
+`;
+          fs.appendFileSync(logFilePath, logContent);
+
+          // Normalize tool arguments (e.g. mapping 'path' -> 'file_path' for DeepSeek)
+          toolRequest.args = normalizeToolParams(toolRequest.name, toolRequest.args || {});
+
+          const normalizedContent = `Normalized Args: ${JSON.stringify(toolRequest.args)}\n`;
+          fs.appendFileSync(logFilePath, normalizedContent);
+
           toolCallRequests.push(toolRequest);
           // 立即保护工具调用，防止被取消
           // Immediately protect tool call to prevent cancellation
