@@ -8,11 +8,13 @@ export interface GeminiClientConfig {
   model?: string;
   baseURL?: string;
   requestOptions?: Record<string, unknown>;
+  conversationId?: string;
 }
 
 export class GeminiRotatingClient extends RotatingApiClient<GoogleGenAI> {
   private readonly config: GeminiClientConfig;
   private readonly converter: OpenAI2GeminiConverter;
+  private readonly conversationId?: string;
 
   constructor(apiKeys: string, config: GeminiClientConfig = {}, options: RotatingApiClientOptions = {}, authType: AuthType = AuthType.USE_GEMINI) {
     const createClient = (apiKey: string) => {
@@ -33,6 +35,7 @@ export class GeminiRotatingClient extends RotatingApiClient<GoogleGenAI> {
 
     super(apiKeys, authType, createClient, options);
     this.config = config;
+    this.conversationId = config.conversationId;
     this.converter = new OpenAI2GeminiConverter({
       defaultModel: config.model || 'gemini-1.5-flash',
     });
@@ -59,8 +62,9 @@ export class GeminiRotatingClient extends RotatingApiClient<GoogleGenAI> {
       const model = await client.models.generateContent({
         model: this.config.model || 'gemini-1.5-flash',
         contents: [{ role: 'user', parts: [{ text: prompt }] }],
+        conversation_id: this.conversationId,
         ...config,
-      });
+      } as any);
       return model;
     });
   }
@@ -77,7 +81,10 @@ export class GeminiRotatingClient extends RotatingApiClient<GoogleGenAI> {
       const geminiRequest = this.converter.convertRequest(params);
 
       // Call Gemini API
-      const geminiResponse = await client.models.generateContent(geminiRequest);
+      const geminiResponse = await client.models.generateContent({
+        ...geminiRequest,
+        conversation_id: this.conversationId,
+      } as any);
 
       // Convert Gemini response back to OpenAI format using converter
       return this.converter.convertResponse(geminiResponse, params.model);

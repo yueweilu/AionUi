@@ -14,11 +14,13 @@ export interface AnthropicClientConfig {
   model?: string;
   baseURL?: string;
   timeout?: number;
+  conversationId?: string;
 }
 
 export class AnthropicRotatingClient extends RotatingApiClient<Anthropic> {
   private readonly config: AnthropicClientConfig;
   private readonly converter: OpenAI2AnthropicConverter;
+  private readonly conversationId?: string;
 
   constructor(apiKeys: string, config: AnthropicClientConfig = {}, options: RotatingApiClientOptions = {}) {
     const createClient = (apiKey: string) => {
@@ -41,6 +43,7 @@ export class AnthropicRotatingClient extends RotatingApiClient<Anthropic> {
 
     super(apiKeys, AuthType.USE_ANTHROPIC, createClient, options);
     this.config = config;
+    this.conversationId = config.conversationId;
     this.converter = new OpenAI2AnthropicConverter({
       defaultModel: config.model || 'claude-sonnet-4-20250514',
     });
@@ -69,7 +72,10 @@ export class AnthropicRotatingClient extends RotatingApiClient<Anthropic> {
       const anthropicRequest = this.converter.convertRequest(params);
 
       // Call Anthropic API
-      const anthropicResponse = await client.messages.create(anthropicRequest);
+      const anthropicResponse = await client.messages.create({
+        ...anthropicRequest,
+        conversation_id: this.conversationId,
+      } as any);
 
       // Convert Anthropic response back to OpenAI format using converter
       return this.converter.convertResponse(anthropicResponse, params.model);
@@ -81,7 +87,10 @@ export class AnthropicRotatingClient extends RotatingApiClient<Anthropic> {
    */
   async createMessage(request: Anthropic.MessageCreateParamsNonStreaming): Promise<Anthropic.Message> {
     return await this.executeWithRetry(async (client) => {
-      return await client.messages.create(request);
+      return await client.messages.create({
+        ...request,
+        conversation_id: this.conversationId,
+      } as any);
     });
   }
 }

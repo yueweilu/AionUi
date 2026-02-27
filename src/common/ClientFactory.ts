@@ -16,6 +16,7 @@ import { isNewApiPlatform } from './utils/platformConstants';
 export interface ClientOptions {
   timeout?: number;
   proxy?: string;
+  conversationId?: string;
   baseConfig?: OpenAIClientConfig | GeminiClientConfig | AnthropicClientConfig;
   rotatingOptions?: RotatingApiClientOptions;
 }
@@ -73,6 +74,7 @@ export class ClientFactory {
         const clientConfig: OpenAIClientConfig = {
           baseURL: baseUrl,
           timeout: options.timeout,
+          conversationId: options.conversationId,
           defaultHeaders: {
             'HTTP-Referer': 'https://aionui.com',
             'X-Title': 'AionUi',
@@ -93,6 +95,7 @@ export class ClientFactory {
         const clientConfig: GeminiClientConfig = {
           model: provider.useModel,
           baseURL: baseUrl,
+          conversationId: options.conversationId,
           ...(options.baseConfig as GeminiClientConfig),
         };
 
@@ -103,6 +106,7 @@ export class ClientFactory {
         const clientConfig: GeminiClientConfig = {
           model: provider.useModel,
           // Note: Don't set baseURL for Vertex AI - it uses Google's built-in endpoints
+          conversationId: options.conversationId,
           ...(options.baseConfig as GeminiClientConfig),
         };
 
@@ -114,6 +118,7 @@ export class ClientFactory {
           model: provider.useModel,
           baseURL: baseUrl,
           timeout: options.timeout,
+          conversationId: options.conversationId,
           ...(options.baseConfig as AnthropicClientConfig),
         };
 
@@ -125,6 +130,7 @@ export class ClientFactory {
         const clientConfig: OpenAIClientConfig = {
           baseURL: baseUrl,
           timeout: options.timeout,
+          conversationId: options.conversationId,
           defaultHeaders: {
             'HTTP-Referer': 'https://aionui.com',
             'X-Title': 'AionUi',

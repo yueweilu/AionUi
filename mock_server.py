@@ -46,6 +46,11 @@ async def chat_completions(request: Request):
         logger.info(f"✅ 成功检测到字段 'api_key': {body['api_key']}")
     else:
         logger.info("❌ 未检测到 'api_key' 字段！")
+
+    if "conversation_id" in body:
+        logger.info(f"✅ 成功检测到字段 'conversation_id': {body['conversation_id']}")
+    else:
+        logger.info("❌ 未检测到 'conversation_id' 字段！")
         
     # 格式化输出 Body
     logger.info(f"完整请求体 Body:\n{json.dumps(body, indent=2, ensure_ascii=False)}")
@@ -62,7 +67,7 @@ async def chat_completions(request: Request):
                 "index": 0,
                 "message": {
                     "role": "assistant",
-                    "content": f"你好！我已经收到了你的请求。你的 api_key 值为: {body.get('api_key', '未提供')}"
+                    "content": f"你好！我已经收到了你的请求。\n- api_key: {body.get('api_key', '未提供')}\n- conversation_id: {body.get('conversation_id', '未提供')}"
                 },
                 "finish_reason": "stop"
             }

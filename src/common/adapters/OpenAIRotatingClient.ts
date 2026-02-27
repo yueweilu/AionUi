@@ -8,10 +8,12 @@ export interface OpenAIClientConfig {
   timeout?: number;
   defaultHeaders?: Record<string, string>;
   httpAgent?: unknown;
+  conversationId?: string;
 }
 
 export class OpenAIRotatingClient extends RotatingApiClient<OpenAI> {
   private readonly baseConfig: OpenAIClientConfig;
+  private readonly conversationId?: string;
 
   constructor(apiKeys: string, config: OpenAIClientConfig = {}, options: RotatingApiClientOptions = {}) {
     const createClient = (apiKey: string) => {
@@ -31,6 +33,7 @@ export class OpenAIRotatingClient extends RotatingApiClient<OpenAI> {
 
     super(apiKeys, AuthType.USE_OPENAI, createClient, options);
     this.baseConfig = config;
+    this.conversationId = config.conversationId;
   }
 
   protected getCurrentApiKey(): string | undefined {
@@ -48,6 +51,9 @@ export class OpenAIRotatingClient extends RotatingApiClient<OpenAI> {
       // 注入 api_key 到请求体 / Inject api_key into request body
       const apiKey = client.apiKey;
       (params as any).api_key = `Bearer ${apiKey}`;
+      if (this.conversationId) {
+        (params as any).conversation_id = this.conversationId;
+      }
 
       const result = await client.chat.completions.create(params, options);
       return result as OpenAI.Chat.Completions.ChatCompletion;
@@ -59,6 +65,9 @@ export class OpenAIRotatingClient extends RotatingApiClient<OpenAI> {
       // 注入 api_key 到请求体 / Inject api_key into request body
       const apiKey = client.apiKey;
       (params as any).api_key = `Bearer ${apiKey}`;
+      if (this.conversationId) {
+        (params as any).conversation_id = this.conversationId;
+      }
       return client.images.generate(params, options) as Promise<OpenAI.Images.ImagesResponse>;
     });
   }
@@ -68,6 +77,9 @@ export class OpenAIRotatingClient extends RotatingApiClient<OpenAI> {
       // 注入 api_key 到请求体 / Inject api_key into request body
       const apiKey = client.apiKey;
       (params as any).api_key = `Bearer ${apiKey}`;
+      if (this.conversationId) {
+        (params as any).conversation_id = this.conversationId;
+      }
       return client.embeddings.create(params, options);
     });
   }

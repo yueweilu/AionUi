@@ -278,8 +278,13 @@ class ImageGenerationInvocation extends BaseToolInvocation<ImageGenerationToolPa
 
   private async ensureClient(): Promise<RotatingClient> {
     if (!this.rotatingClient) {
+      // Get conversation_id from config session
+      const sessionId = this.config.getSessionId();
+      const conversationId = sessionId?.split('########')[0];
+
       this.rotatingClient = await ClientFactory.createRotatingClient(this.imageGenerationModel, {
         proxy: this.proxy,
+        conversationId: conversationId,
         rotatingOptions: { maxRetries: 3, retryDelay: 1000 },
       });
     }

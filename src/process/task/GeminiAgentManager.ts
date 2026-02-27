@@ -166,6 +166,7 @@ export class GeminiAgentManager extends BaseAgentManager<
 
         return this.start({
           ...config,
+          conversation_id: this.conversation_id,
           GOOGLE_CLOUD_PROJECT: projectId,
           workspace: this.workspace,
           model: this.model,

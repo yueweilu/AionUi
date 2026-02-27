@@ -62,6 +62,7 @@ function hasGoogleOAuthCredentials(): boolean {
 
 interface GeminiAgent2Options {
   workspace: string;
+  conversation_id: string;
   proxy?: string;
   model: TProviderWithModel;
   imageGenerationModel?: TProviderWithModel;
@@ -83,6 +84,7 @@ interface GeminiAgent2Options {
 export class GeminiAgent {
   config: Config | null = null;
   private workspace: string | null = null;
+  private conversationId: string | null = null;
   private proxy: string | null = null;
   private model: TProviderWithModel | null = null;
   private imageGenerationModel: TProviderWithModel | null = null;
@@ -117,6 +119,7 @@ export class GeminiAgent {
   }
   constructor(options: GeminiAgent2Options) {
     this.workspace = options.workspace;
+    this.conversationId = options.conversation_id;
     this.proxy = options.proxy;
     this.model = options.model;
     this.imageGenerationModel = options.imageGenerationModel;
@@ -314,6 +317,13 @@ export class GeminiAgent {
 
           if (apiKey && !body.api_key) {
             body.api_key = `Bearer ${apiKey}`;
+          }
+
+          if (this.conversationId && !body.conversation_id) {
+            body.conversation_id = this.conversationId;
+          }
+
+          if (body.api_key || body.conversation_id) {
             init.body = JSON.stringify(body);
             // 同时清除 Authorization Header 避免冲突（可选，根据需求）
             // if (init.headers) {
@@ -323,7 +333,7 @@ export class GeminiAgent {
             // }
           }
         } catch (e) {
-          console.error('[GeminiAgent] Failed to parse/inject api_key into body:', e);
+          console.error('[GeminiAgent] Failed to parse/inject api_key or conversation_id into body:', e);
         }
       }
       return originalFetch(input, init);
