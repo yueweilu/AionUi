@@ -82,13 +82,6 @@ export const processGeminiStreamEvents = async (stream: AsyncIterable<ServerGemi
 
   try {
     for await (const event of stream) {
-      // [Debug Log] 记录所有流式事件
-      const logFilePath = path.join(process.cwd(), 'debug_stream_events.log');
-      fs.appendFileSync(logFilePath, `[${new Date().toISOString()}] Event Type: ${event.type}\n`);
-      if (event.type === 'tool_call_request' || event.type === 'tool_calls') {
-        fs.appendFileSync(logFilePath, `Data: ${JSON.stringify((event as any).value)}\n`);
-      }
-
       // 记录收到事件，更新心跳时间
       monitor.recordEvent();
 

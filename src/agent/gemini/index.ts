@@ -541,23 +541,10 @@ export class GeminiAgent {
         if (data.type === 'tool_call_request') {
           const toolRequest = data.data as ToolCallRequestInfo;
 
-          // [File Debug Log] 写入日志到文件
-          const logFilePath = path.join(process.cwd(), 'debug_tool_calls.log');
-          const logContent = `\n[${new Date().toISOString()}] 
-Tool Name: ${toolRequest.name}
-Args Type: ${typeof toolRequest.args}
-Raw Args: ${JSON.stringify(toolRequest.args)}
-`;
-          fs.appendFileSync(logFilePath, logContent);
-
           // Normalize tool arguments (e.g. mapping 'path' -> 'file_path' for DeepSeek)
           toolRequest.args = normalizeToolParams(toolRequest.name, toolRequest.args || {});
 
-          const normalizedContent = `Normalized Args: ${JSON.stringify(toolRequest.args)}\n`;
-          fs.appendFileSync(logFilePath, normalizedContent);
-
-          toolCallRequests.push(toolRequest);
-          // 立即保护工具调用，防止被取消
+          toolCallRequests.push(toolRequest); // 立即保护工具调用，防止被取消
           // Immediately protect tool call to prevent cancellation
           globalToolCallGuard.protect(toolRequest.callId);
           return;
