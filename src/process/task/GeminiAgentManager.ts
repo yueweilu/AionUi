@@ -40,7 +40,11 @@ type UiMcpServerConfig = {
 export class GeminiAgentManager extends BaseAgentManager<
   {
     workspace: string;
+    conversation_id?: string;
     model: TProviderWithModel;
+    authType?: string;
+    proxy?: string;
+    GOOGLE_GEMINI_BASE_URL?: string;
     imageGenerationModel?: TProviderWithModel;
     webSearchEngine?: 'google' | 'default';
     mcpServers?: Record<string, UiMcpServerConfig>;
