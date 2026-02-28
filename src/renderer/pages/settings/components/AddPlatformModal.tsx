@@ -231,8 +231,8 @@ const AddPlatformModal = ModalHOC<{
             </Select>
           </Form.Item>
 
-          {/* Base URL - 自定义选项、标准 Gemini 和 New API 显示 / Base URL - for Custom, standard Gemini and New API */}
-          <Form.Item hidden={isBedrock || (!isCustom && !isNewApi && platformValue !== 'gemini')} label={t('settings.baseUrl')} field={'baseUrl'} required={isCustom || isNewApi} rules={[{ required: isCustom || isNewApi }]}>
+          {/* Base URL - 自定义选项、标准 Gemini、OpenRouter 和 New API 显示 / Base URL - for Custom, standard Gemini, OpenRouter and New API */}
+          <Form.Item hidden={isBedrock || (!isCustom && !isNewApi && platformValue !== 'gemini' && platformValue !== 'OpenRouter')} label={t('settings.baseUrl')} field={'baseUrl'} required={isCustom || isNewApi || platformValue === 'OpenRouter'} rules={[{ required: isCustom || isNewApi || platformValue === 'OpenRouter' }]}>
             <Input
               placeholder={isNewApi ? 'https://your-newapi-instance.com' : selectedPlatform?.baseUrl || ''}
               onBlur={() => {

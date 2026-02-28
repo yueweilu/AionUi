@@ -43,7 +43,7 @@ const PROVIDER_CONFIGS = [
   { name: 'Anthropic', url: 'https://api.anthropic.com/v1', logo: AnthropicLogo },
   { name: 'AWS Bedrock', url: '', logo: BedrockLogo, platform: 'bedrock' },
   { name: 'DeepSeek', url: 'https://api.deepseek.com', logo: DeepSeekLogo },
-  { name: 'OpenRouter', url: 'https://openrouter.ai/api/v1', logo: OpenRouterLogo },
+  { name: 'OpenRouter', url: 'http://test.lynx.yunji-ai.cn/servers/client-llm-java/api/v1', logo: OpenRouterLogo },
   { name: 'SiliconFlow-CN', url: 'https://api.siliconflow.cn/v1', logo: SiliconFlowLogo },
   { name: 'SiliconFlow', url: 'https://api.siliconflow.com/v1', logo: SiliconFlowLogo },
   { name: 'Dashscope', url: 'https://dashscope.aliyuncs.com/compatible-mode/v1', logo: QwenLogo },
@@ -192,8 +192,8 @@ const EditModeModal = ModalHOC<{ data?: IProvider; onChange(data: IProvider): vo
             <Input placeholder={t('settings.modelProvider')} />
           </Form.Item>
 
-          {/* Base URL - 仅 Gemini 平台显示（用于自定义代理）/ Base URL - only for Gemini platform (for custom proxy) */}
-          <Form.Item hidden={isBedrock} label={t('settings.baseUrl')} required={data?.platform !== 'gemini' && data?.platform !== 'gemini-vertex-ai' && !isBedrock} rules={[{ required: data?.platform !== 'gemini' && data?.platform !== 'gemini-vertex-ai' && !isBedrock }]} field={'baseUrl'} disabled>
+          {/* Base URL - 仅 Gemini、OpenRouter 平台显示 / Base URL - only for Gemini, OpenRouter platform */}
+          <Form.Item hidden={isBedrock} label={t('settings.baseUrl')} required={data?.platform !== 'gemini' && data?.platform !== 'gemini-vertex-ai' && !isBedrock} rules={[{ required: data?.platform !== 'gemini' && data?.platform !== 'gemini-vertex-ai' && !isBedrock }]} field={'baseUrl'} disabled={!isBedrock && data?.platform !== 'gemini' && data?.platform !== 'gemini-vertex-ai' && data?.name !== 'OpenRouter' && data?.platform !== 'custom'}>
             <Input></Input>
           </Form.Item>
 

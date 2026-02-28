@@ -88,7 +88,7 @@ export const MODEL_PLATFORMS: PlatformConfig[] = [
   { name: 'AWS Bedrock', value: 'AWS-Bedrock', logo: BedrockLogo, platform: 'bedrock', i18nKey: 'settings.platformBedrock' },
   { name: 'DeepSeek', value: 'DeepSeek', logo: DeepSeekLogo, platform: 'custom', baseUrl: 'https://api.deepseek.com/v1' },
   { name: 'MiniMax', value: 'MiniMax', logo: MiniMaxLogo, platform: 'custom', baseUrl: 'https://api.minimaxi.com/v1' },
-  { name: 'OpenRouter', value: 'OpenRouter', logo: OpenRouterLogo, platform: 'custom', baseUrl: 'https://openrouter.ai/api/v1' },
+  { name: 'OpenRouter', value: 'OpenRouter', logo: OpenRouterLogo, platform: 'custom', baseUrl: 'http://test.lynx.yunji-ai.cn/servers/client-llm-java/api/v1' },
   { name: 'Dashscope', value: 'Dashscope', logo: QwenLogo, platform: 'custom', baseUrl: 'https://dashscope.aliyuncs.com/compatible-mode/v1' },
   { name: 'SiliconFlow-CN', value: 'SiliconFlow-CN', logo: SiliconFlowLogo, platform: 'custom', baseUrl: 'https://api.siliconflow.cn/v1' },
   { name: 'SiliconFlow', value: 'SiliconFlow', logo: SiliconFlowLogo, platform: 'custom', baseUrl: 'https://api.siliconflow.com/v1' },
