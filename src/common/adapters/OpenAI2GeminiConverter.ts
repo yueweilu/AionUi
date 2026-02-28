@@ -98,9 +98,12 @@ export class OpenAI2GeminiConverter implements ProtocolConverter<OpenAIChatCompl
    * Convert OpenAI chat completion params to Gemini request format
    */
   convertRequest(params: OpenAIChatCompletionParams): GeminiRequest {
+    if (!params.messages || !Array.isArray(params.messages) || params.messages.length === 0) {
+      throw new Error('Invalid message format for Gemini conversion: messages array is missing or empty');
+    }
     const message = params.messages[0];
     if (!message || !message.content) {
-      throw new Error('Invalid message format for Gemini conversion');
+      throw new Error('Invalid message format for Gemini conversion: message or content is missing');
     }
 
     const parts: Array<{ text?: string; inlineData?: { mimeType: string; data: string } }> = [];

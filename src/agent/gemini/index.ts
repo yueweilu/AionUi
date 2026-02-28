@@ -462,7 +462,7 @@ export class GeminiAgent {
 
               this.submitQuery(response, this.activeMsgId ?? uuid(), this.createAbortController(), {
                 isContinuation: true,
-                prompt_id: geminiTools[0].request.prompt_id,
+                prompt_id: geminiTools[0]?.request?.prompt_id,
               });
             }
           }
@@ -831,7 +831,7 @@ export class GeminiAgent {
     let atCommandError: string | null = null;
 
     const { processedQuery, shouldProceed } = await handleAtCommand({
-      query: Array.isArray(message) ? message[0].text : message,
+      query: Array.isArray(message) ? (message[0]?.text ?? '') : message,
       config: this.config,
       addItem: (item: unknown) => {
         // Capture error messages from @ command processing
